@@ -6,15 +6,7 @@ using System.Threading.Tasks;
 
 namespace CoreX.Domain.Entities
 {
-    public enum BookingStatus
-    {
-        New = 0,
-        Confirmed = 1,
-        Cancelled = 2,
-        Completed = 3
-    }
-
-    public class Booking
+    public class Membership
     {
         public Guid Id { get; private set; }
 
@@ -28,25 +20,23 @@ namespace CoreX.Domain.Entities
 
         public Subscription? Subscription { get; private set; }
 
+        public DateTime StartTime { get; private set; }
+
+        public DateTime EndTime { get; private set; }
+
         public BookingStatus Status { get; private set; }
 
-        public DateTime CreatedAt { get; private set; }
 
-        public DateTime? CancelledAt { get; private set; }
+        protected Membership() { }
 
-        protected Booking() { }
-
-        public Booking(
+        public Membership(
             Guid userId,
             Guid clubId,
-            DateTime startTime,
-            DateTime endTime,
+            DateOnly startTime,
             Guid? trainerId = null,
             Guid? subscriptionId = null,
             string? comment = null)
         {
-            if (endTime <= startTime) throw new ArgumentException("EndTime must be greater than StartTime.");
-
             Id = Guid.NewGuid();
 
             UserId = userId;
@@ -54,7 +44,8 @@ namespace CoreX.Domain.Entities
             SubscriptionId = subscriptionId;
 
             Status = BookingStatus.New;
-            CreatedAt = DateTime.UtcNow;
+            StartTime = DateTime.Now;
+            EndTime = StartTime.AddDays(30);
         }
     }
 }
