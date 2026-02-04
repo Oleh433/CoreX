@@ -16,6 +16,29 @@ namespace CoreX.Domain.Entities
 
     public class VacancyApplication
     {
+
+        public Guid Id { get; private set; }
+
+        public Guid VacancyId { get; private set; }
+
+        public Vacancy? Vacancy { get; private set; }
+
+        public Guid? ApplicantId { get; private set; }
+
+        public string FullName { get; private set; } = default!;
+
+        public string Email { get; private set; } = default!;
+
+        public string Phone { get; private set; } = default!;
+
+        public string? Message { get; private set; }
+
+        public string? CVLink { get; private set; }
+
+        public VacancyApplicationStatus Status { get; private set; }
+
+        public DateTime CreatedAt { get; private set; }
+
         protected VacancyApplication() { }
 
         public VacancyApplication(
@@ -37,45 +60,10 @@ namespace CoreX.Domain.Entities
 
             Message = message;
             CVLink = cvLink;
-            TrainerId = trainerId;
+            ApplicantId = trainerId;
 
             Status = VacancyApplicationStatus.New;
             CreatedAt = DateTime.UtcNow;
-        }
-
-        public Guid Id { get; private set; }
-
-        public Guid VacancyId { get; private set; }
-        public Vacancy? Vacancy { get; private set; }
-
-        public Guid? TrainerId { get; private set; }
-
-        public string FullName { get; private set; } = default!;
-        public string Email { get; private set; } = default!;
-        public string Phone { get; private set; } = default!;
-
-        public string? Message { get; private set; }
-        public string? CVLink { get; private set; }
-
-        public VacancyApplicationStatus Status { get; private set; }
-        public DateTime CreatedAt { get; private set; }
-
-        public void MarkReviewed()
-        {
-            if (Status != VacancyApplicationStatus.New) return;
-            Status = VacancyApplicationStatus.Reviewed;
-        }
-
-        public void Accept()
-        {
-            if (Status == VacancyApplicationStatus.Accepted) return;
-            Status = VacancyApplicationStatus.Accepted;
-        }
-
-        public void Reject()
-        {
-            if (Status == VacancyApplicationStatus.Rejected) return;
-            Status = VacancyApplicationStatus.Rejected;
         }
     }
 }
