@@ -1,3 +1,6 @@
+using CoreX.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+
 namespace CoreX
 {
     public class Program
@@ -5,16 +8,13 @@ namespace CoreX
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var app = builder.Build();
 
-            app.Use(async (context, next) =>
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
-                await context.Response.WriteAsync("custom middleware before");
-
-                await next();
-
-                await context.Response.WriteAsync("custom middleware after");
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DatabaseConnectionString"));
             });
+
+            var app = builder.Build();
 
             app.Run();
         }

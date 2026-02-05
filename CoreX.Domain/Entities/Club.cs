@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -11,6 +12,7 @@ namespace CoreX.Domain.Entities
     {
         public Guid Id { get; private set; }
 
+        [StringLength(50)]
         public string Name { get; private set; } = default!;
 
         public string City { get; private set; } = default!;
