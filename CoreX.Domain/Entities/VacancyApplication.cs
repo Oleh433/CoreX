@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,11 +18,11 @@ namespace CoreX.Domain.Entities
 
     public class VacancyApplication
     {
-
+        [Key]
         public Guid Id { get; private set; }
 
         public Guid VacancyId { get; private set; }
-
+        [ForeignKey("VacancyId")]
         public Vacancy? Vacancy { get; private set; }
 
         public Guid? ApplicantId { get; private set; }

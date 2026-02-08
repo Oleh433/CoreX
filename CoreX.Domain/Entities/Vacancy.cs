@@ -1,4 +1,7 @@
-﻿namespace CoreX.Domain.Entities
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CoreX.Domain.Entities
 {
     public enum VacancyStatus
     {
@@ -8,10 +11,11 @@
 
     public class Vacancy
     {
+        [Key]
         public Guid Id { get; private set; }
 
         public Guid ClubId { get; private set; }
-
+        [ForeignKey("ClubId")]
         public Club? Club { get; private set; }
 
         public string Title { get; private set; } = default!;
