@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ namespace CoreX.Domain.Entities
 {
     public class Discount
     {
+        [Key]
         public Guid Id { get; private set; }
 
         public string Title { get; private set; } = default!;
@@ -35,7 +37,8 @@ namespace CoreX.Domain.Entities
             decimal? discountPercent = null,
             string? conditions = null)
         {
-            if (endDate < startDate) throw new ArgumentException("EndDate must be >= StartDate.");
+            if (endDate < startDate) 
+                throw new ArgumentException("EndDate must be >= StartDate.");
 
             Id = Guid.NewGuid();
 

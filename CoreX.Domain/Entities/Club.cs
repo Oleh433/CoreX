@@ -10,6 +10,7 @@ namespace CoreX.Domain.Entities
 {
     public class Club
     {
+        [Key]
         public Guid Id { get; private set; }
 
         [StringLength(50)]
@@ -29,6 +30,8 @@ namespace CoreX.Domain.Entities
 
         public double? Longitude { get; private set; }
 
+        public ICollection<Booking> Bookings { get; private set; } = new List<Booking>();
+
         public ICollection<Trainer> Trainers { get; private set; } = new List<Trainer>();
 
         public ICollection<Subscription> Subscriptions { get; private set; } = new List<Subscription>();
@@ -36,6 +39,8 @@ namespace CoreX.Domain.Entities
         public ICollection<Discount> Discounts { get; private set; } = new List<Discount>();
 
         public ICollection<Vacancy> Vacancies { get; private set; } = new List<Vacancy>();
+
+        public ICollection<Membership> Memberships { get; private set; } = new List<Membership>();
 
         protected Club() { }
 
