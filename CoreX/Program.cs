@@ -15,6 +15,8 @@ namespace CoreX
 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+            builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+
             builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
