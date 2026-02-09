@@ -88,3 +88,4 @@ namespace CoreX.Infrastructure.Repositories
             _context.Bookings.Remove(booking);
         }
     }
+}
