@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CoreX.Domain.Entities
 {
@@ -16,11 +11,11 @@ namespace CoreX.Domain.Entities
         public Guid UserId { get; private set; }
 
         public Guid ClubId { get; private set; }
-        [ForeignKey("ClubId")]
+        [ForeignKey(nameof(ClubId))]
         public Club? Club { get; private set; }
 
         public Guid? SubscriptionId { get; private set; }
-        [ForeignKey("SubscriptionId")]
+        [ForeignKey(nameof(SubscriptionId))]
         public Subscription? Subscription { get; private set; }
 
         public DateTime StartTime { get; private set; }
@@ -30,7 +25,6 @@ namespace CoreX.Domain.Entities
         public Membership(
             Guid userId,
             Guid clubId,
-            DateOnly startTime,
             Guid? subscriptionId)
         {
             Id = Guid.NewGuid();
@@ -39,7 +33,7 @@ namespace CoreX.Domain.Entities
             ClubId = clubId;
             SubscriptionId = subscriptionId;
 
-            StartTime = DateTime.Now;
+            StartTime = DateTime.UtcNow;
         }
     }
 }

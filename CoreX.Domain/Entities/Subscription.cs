@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CoreX.Domain.Entities
 {
@@ -11,6 +7,10 @@ namespace CoreX.Domain.Entities
     {
         [Key]
         public Guid Id { get; private set; }
+
+        public Guid ClubId { get; private set; }
+        [ForeignKey(nameof(ClubId))]
+        public Club? Club { get; private set; }
 
         public string Title { get; private set; } = default!;
 
@@ -26,12 +26,16 @@ namespace CoreX.Domain.Entities
 
         public Subscription(
             string title,
+            Guid clubId,
             decimal price,
             int durationDays,
             int? visitsLimit = null,
             string? description = null)
         {
             Id = Guid.NewGuid();
+
+            ClubId = clubId;
+
             Title = title;
             Price = price;
             DurationDays = durationDays;

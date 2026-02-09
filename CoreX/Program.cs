@@ -1,4 +1,8 @@
+using CoreX.Domain;
+using CoreX.Domain.RepositoryInterfaces;
 using CoreX.Infrastructure;
+using CoreX.Infrastructure.Persistence;
+using CoreX.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoreX
@@ -8,6 +12,10 @@ namespace CoreX
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {

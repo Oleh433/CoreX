@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CoreX.Domain.Entities
 {
@@ -22,10 +17,10 @@ namespace CoreX.Domain.Entities
         public Guid Id { get; private set; }
 
         public Guid VacancyId { get; private set; }
-        [ForeignKey("VacancyId")]
+        [ForeignKey(nameof(VacancyId))]
         public Vacancy? Vacancy { get; private set; }
 
-        public Guid? ApplicantId { get; private set; }
+        public Guid ApplicantId { get; private set; }
 
         public string FullName { get; private set; } = default!;
 
@@ -48,9 +43,9 @@ namespace CoreX.Domain.Entities
             string fullName,
             string email,
             string phone,
+            Guid userId,
             string? message = null,
-            string? cvLink = null,
-            Guid? trainerId = null)
+            string? cvLink = null)
         {
             Id = Guid.NewGuid();
 
@@ -62,7 +57,7 @@ namespace CoreX.Domain.Entities
 
             Message = message;
             CVLink = cvLink;
-            ApplicantId = trainerId;
+            ApplicantId = userId;
 
             Status = VacancyApplicationStatus.New;
             CreatedAt = DateTime.UtcNow;
