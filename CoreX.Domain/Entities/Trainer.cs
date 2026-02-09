@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CoreX.Domain.Entities
 {
@@ -15,7 +10,7 @@ namespace CoreX.Domain.Entities
 
         public Guid ClubId { get; private set; }
 
-        [ForeignKey("ClubId")]
+        [ForeignKey(nameof(ClubId))]
         public Club? Club { get; private set; }
 
         public string FullName { get; private set; } = default!;

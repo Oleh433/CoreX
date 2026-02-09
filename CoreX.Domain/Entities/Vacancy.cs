@@ -3,19 +3,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CoreX.Domain.Entities
 {
-    public enum VacancyStatus
-    {
-        Open = 0,
-        Closed = 1
-    }
-
     public class Vacancy
     {
         [Key]
         public Guid Id { get; private set; }
 
         public Guid ClubId { get; private set; }
-        [ForeignKey("ClubId")]
+        [ForeignKey(nameof(ClubId))]
         public Club? Club { get; private set; }
 
         public string Title { get; private set; } = default!;

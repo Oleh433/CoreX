@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace CoreX.Domain.Entities
 {
@@ -29,7 +24,6 @@ namespace CoreX.Domain.Entities
         protected Discount() { }
 
         public Discount(
-            Guid clubId,
             string title,
             DateTime startDate,
             DateTime endDate,
@@ -37,12 +31,11 @@ namespace CoreX.Domain.Entities
             decimal? discountPercent = null,
             string? conditions = null)
         {
-            if (endDate < startDate) 
+            if (endDate < startDate)
                 throw new ArgumentException("EndDate must be >= StartDate.");
 
             Id = Guid.NewGuid();
 
-            DiscountPercent = discountPercent;
             Title = title;
             Description = description;
             StartDate = startDate;
