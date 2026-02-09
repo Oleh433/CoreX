@@ -17,6 +17,8 @@ namespace CoreX
 
             builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 
+            builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
+
             builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
