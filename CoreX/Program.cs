@@ -21,6 +21,8 @@ namespace CoreX
 
             builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
+            builder.Services.AddScoped<ITrainerRepository, TrainerRepository>();
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DatabaseConnectionString"));
