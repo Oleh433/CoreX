@@ -23,9 +23,12 @@ namespace CoreX
 
             builder.Services.AddScoped<IVacancyApplicationRepository, VacancyApplicationRepository>();
 
+            builder.Services.AddScoped<IVacancyRepository, VacancyRepository>();
+
             builder.Services.AddScoped<ITrainerRepository, TrainerRepository>();
 
             builder.Services.AddScoped<IMembershipRepository, MembershipRepository>();
+
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
