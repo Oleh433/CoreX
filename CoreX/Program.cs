@@ -15,6 +15,8 @@ namespace CoreX
 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+            builder.Services.AddScoped<IClubRepository, ClubRepository>();
+
             builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 
             builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
