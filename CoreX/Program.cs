@@ -38,6 +38,8 @@ namespace CoreX
 
             builder.Services.AddScoped<IBookingService, BookingService>();
 
+            builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
