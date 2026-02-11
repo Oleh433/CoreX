@@ -54,5 +54,22 @@ namespace CoreX.Domain.Entities
             Status = BookingStatus.New;
             CreatedAt = DateTime.UtcNow;
         }
+
+        public void Confirm()
+        {
+            if (Status != BookingStatus.New)
+                throw new InvalidOperationException("Only NEW bookings can be confirmed.");
+
+            Status = BookingStatus.Confirmed;
+        }
+
+        public void Cancel()
+        {
+            if (Status == BookingStatus.Completed)
+                throw new InvalidOperationException("Completed booking cannot be cancelled.");
+
+            Status = BookingStatus.Cancelled;
+            CancelledAt = DateTime.UtcNow;
+        }
     }
 }
