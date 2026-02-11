@@ -1,3 +1,5 @@
+using CoreX.Application.ServiceInterfaces;
+using CoreX.Application.Services;
 using CoreX.Domain;
 using CoreX.Domain.RepositoryInterfaces;
 using CoreX.Infrastructure;
@@ -30,6 +32,11 @@ namespace CoreX
             builder.Services.AddScoped<ITrainerRepository, TrainerRepository>();
 
             builder.Services.AddScoped<IMembershipRepository, MembershipRepository>();
+
+
+            builder.Services.AddScoped<IClubService, ClubService>();
+
+            builder.Services.AddScoped<IBookingService, BookingService>();
 
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
