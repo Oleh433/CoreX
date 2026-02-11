@@ -40,6 +40,8 @@ namespace CoreX
 
             builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
+            builder.Services.AddScoped<IMembershipService, MembershipService>();
+
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
