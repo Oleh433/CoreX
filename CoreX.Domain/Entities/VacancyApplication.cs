@@ -62,5 +62,11 @@ namespace CoreX.Domain.Entities
             Status = VacancyApplicationStatus.New;
             CreatedAt = DateTime.UtcNow;
         }
+
+        public void ChangeStatus(VacancyApplicationStatus status)
+        {
+            Status = status;
+        }
+
     }
 }
