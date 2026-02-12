@@ -48,6 +48,8 @@ namespace CoreX
 
             builder.Services.AddScoped<IVacancyService, VacancyService>();
 
+            builder.Services.AddScoped<IVacancyApplicationService, VacancyApplicationService>();
+
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
