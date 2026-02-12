@@ -45,6 +45,26 @@ namespace CoreX.Domain.Entities
 
             IsActive = true;
         }
+        public void Update(
+            string title,
+            DateTime startDate,
+            DateTime endDate,
+            string? description,
+            decimal? discountPercent,
+            string? conditions,
+            bool isActive)
+        {
+            if (endDate < startDate)
+                throw new ArgumentException("EndDate must be >= StartDate.");
+
+            Title = title;
+            Description = description;
+            StartDate = startDate;
+            EndDate = endDate;
+            DiscountPercent = discountPercent;
+            Conditions = conditions;
+            IsActive = isActive;
+        }
     }
 
 }
