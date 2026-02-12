@@ -47,5 +47,22 @@ namespace CoreX.Domain.Entities
             Email = email;
             Phone = phone;
         }
+
+        public void Update(
+            string fullName,
+            string specialization,
+            int experienceYears,
+            string? bio,
+            string? email,
+            string? phone)
+        {
+            FullName = fullName;
+            Specialization = specialization;
+            ExperienceYears = experienceYears;
+
+            Bio = bio;
+            Email = email;
+            Phone = phone;
+        }
     }
 }
