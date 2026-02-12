@@ -45,5 +45,33 @@ namespace CoreX.Domain.Entities
 
             IsActive = true;
         }
+        public void Update(
+            string title,
+            string description,
+            string requirements,
+            decimal? salary)
+        {
+            Title = title.Trim();
+
+            Description = string.IsNullOrWhiteSpace(description)
+                ? throw new ArgumentException("Description is required.")
+                : description.Trim();
+
+            Requirements = string.IsNullOrWhiteSpace(requirements)
+                ? throw new ArgumentException("Requirements is required.")
+                : requirements.Trim();
+
+            Salary = salary;
+        }
+
+        public void Deactivate()
+        {
+            IsActive = false;
+        }
+
+        public void Activate()
+        {
+            IsActive = true;
+        }
     }
 }

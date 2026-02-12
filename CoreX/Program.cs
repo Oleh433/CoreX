@@ -46,6 +46,8 @@ namespace CoreX
 
             builder.Services.AddScoped<ITrainerService, TrainerService>();
 
+            builder.Services.AddScoped<IVacancyService, VacancyService>();
+
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
