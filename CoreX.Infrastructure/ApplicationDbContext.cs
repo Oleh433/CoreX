@@ -1,9 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using CoreX.Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using CoreX.Domain.IdentityEntities;
 
 namespace CoreX.Infrastructure
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : 
+        IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
     {
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Club> Clubs { get; set; }
