@@ -8,16 +8,21 @@ namespace CoreX.Domain.Entities
         [Key]
         public Guid Id { get; private set; }
 
+        [Required]
         public Guid UserId { get; private set; }
 
+        [Required]
         public Guid ClubId { get; private set; }
+
         [ForeignKey(nameof(ClubId))]
         public Club? Club { get; private set; }
 
         public Guid? SubscriptionId { get; private set; }
+
         [ForeignKey(nameof(SubscriptionId))]
         public Subscription? Subscription { get; private set; }
 
+        [Required]
         public DateTime StartTime { get; private set; }
 
         protected Membership() { }

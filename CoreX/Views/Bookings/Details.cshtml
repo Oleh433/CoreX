@@ -1,0 +1,36 @@
+﻿@model CoreX.Application.DTO.BookingResponseDto
+
+<h2>Booking Details</h2>
+
+<div>
+    <p><b>Status:</b> @Model.Status</p>
+    <p><b>Created:</b> @Model.CreatedAt</p>
+    <p><b>ClubId:</b> @Model.ClubId</p>
+    <p><b>SubscriptionId:</b> @Model.SubscriptionId</p>
+    <p><b>DiscountId:</b> @Model.DiscountId</p>
+
+    @if (Model.CancelledAt != null)
+    {
+        <p><b>Cancelled At:</b> @Model.CancelledAt</p>
+    }
+</div>
+
+<hr />
+
+@if (Model.Status == "New")
+{
+    <form method="post" action="/bookings/confirm/@Model.Id">
+        <button class="btn btn-success">Confirm</button>
+    </form>
+}
+
+@if (Model.Status != "Cancelled")
+{
+    <form method="post" action="/bookings/cancel/@Model.Id">
+        <button class="btn btn-danger">Cancel</button>
+    </form>
+}
+
+<a class="btn btn-secondary" href="/bookings/my">
+    Back
+</a>

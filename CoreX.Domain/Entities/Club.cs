@@ -7,31 +7,39 @@ namespace CoreX.Domain.Entities
         [Key]
         public Guid Id { get; private set; }
 
-        [StringLength(50)]
+        [Required]
+        [StringLength(50, MinimumLength = 2)]
         public string Name { get; private set; } = default!;
 
+        [Required]
+        [StringLength(50)]
         public string City { get; private set; } = default!;
 
+        [Required]
+        [StringLength(100)]
         public string Address { get; private set; } = default!;
 
+        [StringLength(500)]
         public string? Description { get; private set; }
 
+        [Phone]
+        [StringLength(20)]
         public string? Phone { get; private set; }
 
+        [EmailAddress]
+        [StringLength(100)]
         public string? Email { get; private set; }
 
+        [Range(-90, 90)]
         public double? Latitude { get; private set; }
 
+        [Range(-180, 180)]
         public double? Longitude { get; private set; }
 
         public ICollection<Booking> Bookings { get; private set; } = new List<Booking>();
-
         public ICollection<Trainer> Trainers { get; private set; } = new List<Trainer>();
-
         public ICollection<Subscription> Subscriptions { get; private set; } = new List<Subscription>();
-
         public ICollection<Vacancy> Vacancies { get; private set; } = new List<Vacancy>();
-
         public ICollection<Membership> Memberships { get; private set; } = new List<Membership>();
 
         protected Club() { }
