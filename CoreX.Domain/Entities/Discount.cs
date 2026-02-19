@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CoreX.Domain.Entities
 {
@@ -7,17 +8,25 @@ namespace CoreX.Domain.Entities
         [Key]
         public Guid Id { get; private set; }
 
+        [Required]
+        [StringLength(100, MinimumLength = 2)]
         public string Title { get; private set; } = default!;
 
+        [StringLength(500)]
         public string? Description { get; private set; }
 
+        [Range(0, 100)]
+        [Column(TypeName = "decimal(5,2)")]
         public decimal? DiscountPercent { get; private set; }
 
+        [StringLength(300)]
         public string? Conditions { get; private set; }
 
-        public DateTime? StartDate { get; private set; }
+        [Required]
+        public DateTime StartDate { get; private set; }
 
-        public DateTime? EndDate { get; private set; }
+        [Required]
+        public DateTime EndDate { get; private set; }
 
         public bool IsActive { get; private set; }
 

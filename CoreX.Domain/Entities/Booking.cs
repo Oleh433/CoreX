@@ -16,22 +16,29 @@ namespace CoreX.Domain.Entities
         [Key]
         public Guid Id { get; private set; }
 
+        [Required]
         public Guid UserId { get; private set; }
 
+        [Required]
         public Guid ClubId { get; private set; }
+
         [ForeignKey(nameof(ClubId))]
         public Club? Club { get; private set; }
 
         public Guid? SubscriptionId { get; private set; }
+
         [ForeignKey(nameof(SubscriptionId))]
         public Subscription? Subscription { get; private set; }
 
+        [Required]
         public BookingStatus Status { get; private set; }
 
         public Guid? DiscountId { get; private set; }
+
         [ForeignKey(nameof(DiscountId))]
         public Discount? Discount { get; private set; }
 
+        [Required]
         public DateTime CreatedAt { get; private set; }
 
         public DateTime? CancelledAt { get; private set; }

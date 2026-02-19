@@ -8,18 +8,29 @@ namespace CoreX.Domain.Entities
         [Key]
         public Guid Id { get; private set; }
 
+        [Required]
         public Guid ClubId { get; private set; }
+
         [ForeignKey(nameof(ClubId))]
         public Club? Club { get; private set; }
 
+        [Required]
+        [StringLength(100, MinimumLength = 3)]
         public string Title { get; private set; } = default!;
 
+        [StringLength(500)]
         public string? Description { get; private set; }
 
-        public decimal Price { get; private set; } = default!;
+        [Required]
+        [Range(0.01, 100000)]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Price { get; private set; }
 
+        [Required]
+        [Range(1, 365)]
         public int DurationDays { get; private set; }
 
+        [Range(1, 100)]
         public int? VisitsLimit { get; private set; }
 
         protected Subscription() { }

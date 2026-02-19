@@ -8,21 +8,33 @@ namespace CoreX.Domain.Entities
         [Key]
         public Guid Id { get; private set; }
 
+        [Required]
         public Guid ClubId { get; private set; }
+
         [ForeignKey(nameof(ClubId))]
         public Club? Club { get; private set; }
 
+        [Required]
+        [StringLength(100, MinimumLength = 3)]
         public string Title { get; private set; } = default!;
 
+        [Required]
+        [StringLength(2000, MinimumLength = 10)]
         public string Description { get; private set; } = default!;
 
+        [Required]
+        [StringLength(2000, MinimumLength = 5)]
         public string Requirements { get; private set; } = default!;
 
+        [Column(TypeName = "decimal(18,2)")]
+        [Range(0, 1000000)]
         public decimal? Salary { get; private set; }
 
-        public bool IsActive { get; private set; }
+        [Required]
+        public bool IsActive { get; private set; } = true;
 
-        public ICollection<VacancyApplication> Applications { get; private set; } = new List<VacancyApplication>();
+        public ICollection<VacancyApplication> Applications { get; private set; }
+            = new List<VacancyApplication>();
 
         protected Vacancy() { }
 

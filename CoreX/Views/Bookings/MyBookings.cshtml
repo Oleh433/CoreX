@@ -1,0 +1,34 @@
+﻿@model List<CoreX.Application.DTO.BookingResponseDto>
+
+<h2>My Bookings</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Club</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var booking in Model)
+        {
+            <tr>
+                <td>@booking.Status</td>
+                <td>@booking.CreatedAt.ToString("g")</td>
+                <td>@booking.ClubId</td>
+                <td>
+                    <a class="btn btn-sm btn-primary"
+                       href="/bookings/details/@booking.Id">
+                        Details
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a class="btn btn-success" href="/bookings/create">
+    Create Booking
+</a>

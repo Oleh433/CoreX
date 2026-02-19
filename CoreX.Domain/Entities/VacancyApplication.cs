@@ -16,24 +16,40 @@ namespace CoreX.Domain.Entities
         [Key]
         public Guid Id { get; private set; }
 
+        [Required]
         public Guid VacancyId { get; private set; }
+
         [ForeignKey(nameof(VacancyId))]
         public Vacancy? Vacancy { get; private set; }
 
+        [Required]
         public Guid ApplicantId { get; private set; }
 
+        [Required]
+        [StringLength(100, MinimumLength = 3)]
         public string FullName { get; private set; } = default!;
 
+        [Required]
+        [EmailAddress]
+        [StringLength(150)]
         public string Email { get; private set; } = default!;
 
+        [Required]
+        [Phone]
+        [StringLength(30)]
         public string Phone { get; private set; } = default!;
 
+        [StringLength(2000)]
         public string? Message { get; private set; }
 
+        [StringLength(500)]
+        [Url]
         public string? CVLink { get; private set; }
 
+        [Required]
         public VacancyApplicationStatus Status { get; private set; }
 
+        [Required]
         public DateTime CreatedAt { get; private set; }
 
         protected VacancyApplication() { }
