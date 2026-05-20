@@ -1,0 +1,64 @@
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Localization
+@inject IAntiforgery Antiforgery
+@{
+    var tokens = Antiforgery.GetAndStoreTokens(Context);
+    var currentCulture = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+<!DOCTYPE html>
+<html lang="@currentCulture">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"]) · @S["BrandName"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body hx-headers='{"@tokens.HeaderName":"@tokens.RequestToken"}'>
+
+    <header class="border-b border-ink-200 bg-white">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-6">
+            <a href="/" class="text-2xl font-black tracking-tight text-ink-900">
+                Core<span class="text-brand-500">X</span>
+            </a>
+            <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-ink-800">
+                <a href="/Clubs">@S["NavClubs"]</a>
+                <a href="/Memberships">@S["NavMemberships"]</a>
+                <a href="/Trainers">@S["NavTrainers"]</a>
+                <a href="/Discounts">@S["NavDiscounts"]</a>
+                <a href="/Vacancies">@S["NavVacancies"]</a>
+                <a href="/TrainingPlan">@S["NavTrainingPlan"]</a>
+            </nav>
+            <div class="flex items-center gap-3">
+                <form method="post" action="/SetLanguage" class="flex items-center">
+                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    <select name="culture" onchange="this.form.submit()"
+                            class="text-sm border border-ink-200 rounded-pill px-3 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            aria-label="Language">
+                        <option value="uk" selected="@(currentCulture == "uk")">@S["LanguageUkrainian"]</option>
+                        <option value="en" selected="@(currentCulture == "en")">@S["LanguageEnglish"]</option>
+                    </select>
+                </form>
+                <a href="/Account/Login" class="btn-ghost text-sm">@S["SignIn"]</a>
+                <a href="/Account/Register" class="btn-brand text-sm">@S["Register"]</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <footer class="border-t border-ink-200 bg-ink-50 mt-16">
+        <div class="max-w-6xl mx-auto px-4 py-8 text-sm text-ink-500">
+            @string.Format(S["FooterCopyright"].Value, DateTime.UtcNow.Year)
+        </div>
+    </footer>
+
+    <script src="~/js/htmx.min.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>
