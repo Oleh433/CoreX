@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="BrandName" xml:space="preserve"><value>CoreX</value></data>
+  <data name="NavClubs" xml:space="preserve"><value>Clubs</value></data>
+  <data name="NavMemberships" xml:space="preserve"><value>Memberships</value></data>
+  <data name="NavTrainers" xml:space="preserve"><value>Trainers</value></data>
+  <data name="NavDiscounts" xml:space="preserve"><value>Promotions</value></data>
+  <data name="NavVacancies" xml:space="preserve"><value>Careers</value></data>
+  <data name="NavTrainingPlan" xml:space="preserve"><value>Training Plan</value></data>
+  <data name="SignIn" xml:space="preserve"><value>Sign in</value></data>
+  <data name="Register" xml:space="preserve"><value>Register</value></data>
+  <data name="LanguageUkrainian" xml:space="preserve"><value>Українська</value></data>
+  <data name="LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="FooterCopyright" xml:space="preserve"><value>© {0} CoreX. All rights reserved.</value></data>
+</root>

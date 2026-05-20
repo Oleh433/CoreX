@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Eyebrow" xml:space="preserve"><value>FITNESS CLUB NETWORK</value></data>
+  <data name="HeadlineLine1" xml:space="preserve"><value>Push your limit.</value></data>
+  <data name="HeadlineLine2" xml:space="preserve"><value>Train at CoreX.</value></data>
+  <data name="HeroSubtitle" xml:space="preserve"><value>Find a club, a trainer, and the membership that fits you.</value></data>
+  <data name="HeroCta" xml:space="preserve"><value>Find a club</value></data>
+</root>
