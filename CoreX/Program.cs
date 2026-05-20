@@ -91,7 +91,8 @@ namespace CoreX
                 options.Conventions.AuthorizePage("/Admin/Subscriptions/Index", "OwnerOnly");
                 options.Conventions.AuthorizePage("/Admin/Discounts/Index", "OwnerOnly");
                 options.Conventions.AuthorizePage("/Admin/Users/RegisterAdmin", "OwnerOnly");
-            });
+            })
+            .AddViewLocalization();
 
             builder.Services.AddAuthorization(o =>
             {

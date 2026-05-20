@@ -1,0 +1,23 @@
+@page
+@model CoreX.Pages.IndexModel
+@{
+    ViewData["Title"] = L["HeadlineLine1"].Value;
+}
+
+<section class="bg-flame text-white">
+    <div class="max-w-6xl mx-auto px-4 py-20 md:py-28">
+        <p class="text-xs font-semibold tracking-[0.2em] uppercase opacity-80">
+            @L["Eyebrow"]
+        </p>
+        <h1 class="mt-3 text-4xl md:text-6xl font-black leading-[1.05] tracking-tight uppercase">
+            @L["HeadlineLine1"]<br />
+            @L["HeadlineLine2"]
+        </h1>
+        <p class="mt-5 max-w-xl text-base md:text-lg opacity-90">
+            @L["HeroSubtitle"]
+        </p>
+        <a href="/Clubs" class="btn-brand mt-8 bg-ink-900 hover:bg-ink-800 shadow-none">
+            @L["HeroCta"] →
+        </a>
+    </div>
+</section>
