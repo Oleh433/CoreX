@@ -11,7 +11,9 @@ using CoreX.Infrastructure.Repositories;
 using CoreX.UI.Filters;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace CoreX
 {
@@ -80,6 +82,33 @@ namespace CoreX
                 options.Filters.Add<GlobalExceptionFilter>();
             });
 
+            builder.Services.AddRazorPages(options =>
+            {
+                options.Conventions.AuthorizeFolder("/Admin", "AdminOrOwner");
+                options.Conventions.AuthorizeFolder("/Account", "AuthenticatedOnly");
+                options.Conventions.AllowAnonymousToPage("/Account/Login");
+                options.Conventions.AllowAnonymousToPage("/Account/Register");
+                options.Conventions.AuthorizePage("/Admin/Subscriptions/Index", "OwnerOnly");
+                options.Conventions.AuthorizePage("/Admin/Discounts/Index", "OwnerOnly");
+                options.Conventions.AuthorizePage("/Admin/Users/RegisterAdmin", "OwnerOnly");
+            });
+
+            builder.Services.AddAuthorization(o =>
+            {
+                o.AddPolicy("AdminOrOwner",      p => p.RequireRole("Admin", "Owner"));
+                o.AddPolicy("OwnerOnly",         p => p.RequireRole("Owner"));
+                o.AddPolicy("AuthenticatedOnly", p => p.RequireAuthenticatedUser());
+            });
+
+            builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
+            builder.Services.Configure<RequestLocalizationOptions>(o =>
+            {
+                var supported = new[] { new CultureInfo("uk"), new CultureInfo("en") };
+                o.DefaultRequestCulture = new RequestCulture("uk");
+                o.SupportedCultures = supported;
+                o.SupportedUICultures = supported;
+            });
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DatabaseConnectionString"));
@@ -117,11 +146,14 @@ namespace CoreX
 
             app.UseStaticFiles();
 
+            app.UseRequestLocalization();
+
             app.UseAuthentication();
 
             app.UseAuthorization();
 
             app.MapControllers();
+            app.MapRazorPages();
 
             app.Run();
         }
