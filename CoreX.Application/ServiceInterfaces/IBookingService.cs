@@ -12,7 +12,7 @@ namespace CoreX.Application.ServiceInterfaces
 
         Task<List<BookingResponseDto>> GetByClubIdAsync(Guid clubId);
 
-        Task<Guid> CreateAsync(CreateBookingDto dto);
+        Task<Guid> CreateAsync(Guid userId, CreateBookingDto dto);
 
         Task<bool> ConfirmAsync(Guid bookingId);
 

@@ -68,10 +68,10 @@ namespace CoreX.Application.Services
             var vacancy = await _vacancyRepository.GetByIdAsync(dto.VacancyId);
 
             if (vacancy == null)
-                throw new Exception("Vacancy not found.");
+                throw new KeyNotFoundException("Vacancy not found.");
 
             if (!vacancy.IsActive)
-                throw new Exception("Vacancy is not active.");
+                throw new InvalidOperationException("Vacancy is not active.");
 
             var application = new VacancyApplication(
                 vacancyId: dto.VacancyId,
@@ -79,6 +79,7 @@ namespace CoreX.Application.Services
                 email: dto.Email,
                 phone: dto.Phone,
                 userId: dto.ApplicantId,
+                experience: dto.Experience,
                 message: dto.Message,
                 cvLink: dto.CVLink
             );
@@ -103,9 +104,9 @@ namespace CoreX.Application.Services
                 return false;
 
             if (!Enum.IsDefined(typeof(VacancyApplicationStatus), dto.Status))
-                throw new Exception("Invalid status value.");
+                throw new ArgumentException("Invalid status value.");
 
-            var newStatus = (VacancyApplicationStatus)dto.Status;
+            var newStatus = dto.Status;
 
             application.ChangeStatus(newStatus);
 

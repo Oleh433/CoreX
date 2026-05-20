@@ -54,16 +54,16 @@ namespace CoreX.Application.Services
             return bookings.Select(BookingMapper.ToDto).ToList();
         }
 
-        public async Task<Guid> CreateAsync(CreateBookingDto dto)
+        public async Task<Guid> CreateAsync(Guid userId, CreateBookingDto dto)
         {
-            if (dto.UserId == Guid.Empty)
+            if (userId == Guid.Empty)
                 throw new ArgumentException("UserId is required.");
 
             if (dto.ClubId == Guid.Empty)
                 throw new ArgumentException("ClubId is required.");
 
             var booking = new Booking(
-                userId: dto.UserId,
+                userId: userId,
                 clubId: dto.ClubId,
                 contactFullName: dto.ContactFullName,
                 contactEmail: dto.ContactEmail,

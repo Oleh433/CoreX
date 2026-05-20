@@ -1,4 +1,4 @@
-﻿namespace CoreX.Application.DTO
+namespace CoreX.Application.DTO
 {
     public class CreateVacancyApplicationDto
     {
@@ -11,6 +11,8 @@
         public string Email { get; set; } = default!;
 
         public string Phone { get; set; } = default!;
+
+        public string Experience { get; set; } = default!;
 
         public string? Message { get; set; }
 

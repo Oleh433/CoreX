@@ -1,10 +1,5 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CoreX.Application.Mappers
 {
@@ -24,6 +19,9 @@ namespace CoreX.Application.Mappers
 
                 Salary = vacancy.Salary,
                 IsActive = vacancy.IsActive,
+
+                CreatedAt = vacancy.CreatedAt,
+                ApplicationDeadline = vacancy.ApplicationDeadline,
 
                 ApplicationsCount = vacancy.Applications.Count
             };

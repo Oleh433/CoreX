@@ -1,9 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace CoreX.Application.DTO
 {
     public class CreateVacancyDto
@@ -17,5 +11,7 @@ namespace CoreX.Application.DTO
         public string Requirements { get; set; } = default!;
 
         public decimal? Salary { get; set; }
+
+        public DateTime? ApplicationDeadline { get; set; }
     }
 }

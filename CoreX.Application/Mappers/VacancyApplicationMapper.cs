@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Domain.Entities;
 
 namespace CoreX.Application.Mappers
@@ -19,6 +19,7 @@ namespace CoreX.Application.Mappers
                 Email = app.Email,
                 Phone = app.Phone,
 
+                Experience = app.Experience,
                 Message = app.Message,
                 CVLink = app.CVLink,
 

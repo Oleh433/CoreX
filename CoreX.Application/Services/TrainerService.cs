@@ -59,7 +59,7 @@ namespace CoreX.Application.Services
             var club = await _clubRepository.GetByIdAsync(dto.ClubId);
 
             if (club == null)
-                throw new Exception("Club not found.");
+                throw new KeyNotFoundException("Club not found.");
 
             if (string.IsNullOrWhiteSpace(dto.FullName))
                 throw new ArgumentException("FullName is required.");

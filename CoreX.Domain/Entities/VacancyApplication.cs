@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CoreX.Domain.Entities
@@ -39,6 +39,10 @@ namespace CoreX.Domain.Entities
         [StringLength(30)]
         public string Phone { get; private set; } = default!;
 
+        [Required]
+        [StringLength(2000, MinimumLength = 10)]
+        public string Experience { get; private set; } = default!;
+
         [StringLength(2000)]
         public string? Message { get; private set; }
 
@@ -60,6 +64,7 @@ namespace CoreX.Domain.Entities
             string email,
             string phone,
             Guid userId,
+            string experience,
             string? message = null,
             string? cvLink = null)
         {
@@ -70,6 +75,7 @@ namespace CoreX.Domain.Entities
             FullName = string.IsNullOrWhiteSpace(fullName) ? throw new ArgumentException("FullName is required.") : fullName.Trim();
             Email = string.IsNullOrWhiteSpace(email) ? throw new ArgumentException("Email is required.") : email.Trim();
             Phone = string.IsNullOrWhiteSpace(phone) ? throw new ArgumentException("Phone is required.") : phone.Trim();
+            Experience = string.IsNullOrWhiteSpace(experience) ? throw new ArgumentException("Experience is required.") : experience.Trim();
 
             Message = message;
             CVLink = cvLink;

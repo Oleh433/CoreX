@@ -65,7 +65,7 @@ namespace CoreX.Application.Services
             var club = await _clubRepository.GetByIdAsync(dto.ClubId);
 
             if (club == null)
-                throw new Exception("Club not found.");
+                throw new KeyNotFoundException("Club not found.");
 
             if (string.IsNullOrWhiteSpace(dto.Title))
                 throw new ArgumentException("Title is required.");
@@ -75,7 +75,8 @@ namespace CoreX.Application.Services
                 title: dto.Title,
                 description: dto.Description,
                 requirements: dto.Requirements,
-                salary: dto.Salary
+                salary: dto.Salary,
+                applicationDeadline: dto.ApplicationDeadline
             );
 
             await _vacancyRepository.AddAsync(vacancy);
@@ -97,7 +98,8 @@ namespace CoreX.Application.Services
                 dto.Title,
                 dto.Description,
                 dto.Requirements,
-                dto.Salary
+                dto.Salary,
+                dto.ApplicationDeadline
             );
 
             _vacancyRepository.Update(vacancy);

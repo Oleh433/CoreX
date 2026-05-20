@@ -45,7 +45,7 @@ namespace CoreX.Application.Services
             var club = await _clubRepository.GetByIdAsync(dto.ClubId);
 
             if (club == null)
-                throw new InvalidOperationException("Club not found.");
+                throw new KeyNotFoundException("Club not found.");
 
             var groupClass = new GroupClass(
                 clubId: dto.ClubId,

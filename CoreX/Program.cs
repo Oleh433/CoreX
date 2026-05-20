@@ -8,6 +8,7 @@ using CoreX.Infrastructure.Email;
 using CoreX.Infrastructure.Identity;
 using CoreX.Infrastructure.Persistence;
 using CoreX.Infrastructure.Repositories;
+using CoreX.UI.Filters;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -74,7 +75,10 @@ namespace CoreX
 
             builder.Services.AddHttpContextAccessor();
 
-            builder.Services.AddControllersWithViews();
+            builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add<GlobalExceptionFilter>();
+            });
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {

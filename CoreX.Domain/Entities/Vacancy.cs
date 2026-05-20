@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CoreX.Domain.Entities
@@ -33,6 +33,11 @@ namespace CoreX.Domain.Entities
         [Required]
         public bool IsActive { get; private set; } = true;
 
+        [Required]
+        public DateTime CreatedAt { get; private set; }
+
+        public DateTime? ApplicationDeadline { get; private set; }
+
         public ICollection<VacancyApplication> Applications { get; private set; }
             = new List<VacancyApplication>();
 
@@ -43,7 +48,8 @@ namespace CoreX.Domain.Entities
             string title,
             string description,
             string requirements,
-            decimal? salary = null)
+            decimal? salary = null,
+            DateTime? applicationDeadline = null)
         {
             Id = Guid.NewGuid();
 
@@ -56,12 +62,17 @@ namespace CoreX.Domain.Entities
             Salary = salary;
 
             IsActive = true;
+
+            CreatedAt = DateTime.UtcNow;
+            ApplicationDeadline = applicationDeadline;
         }
+
         public void Update(
             string title,
             string description,
             string requirements,
-            decimal? salary)
+            decimal? salary,
+            DateTime? applicationDeadline)
         {
             Title = title.Trim();
 
@@ -74,6 +85,7 @@ namespace CoreX.Domain.Entities
                 : requirements.Trim();
 
             Salary = salary;
+            ApplicationDeadline = applicationDeadline;
         }
 
         public void Deactivate()

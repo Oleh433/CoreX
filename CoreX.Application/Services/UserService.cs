@@ -45,13 +45,13 @@ namespace CoreX.Application.Services
                 lockoutOnFailure: true);
 
             if (signInResult.IsLockedOut)
-                throw new Exception("User is locked out");
+                throw new UnauthorizedAccessException("Account is temporarily locked due to multiple failed sign-in attempts.");
 
             if (signInResult.IsNotAllowed)
-                throw new Exception("User is not allowed");
+                throw new UnauthorizedAccessException("Account is not allowed to sign in.");
 
             if (!signInResult.Succeeded)
-                throw new Exception("Invalid email or password");
+                throw new UnauthorizedAccessException("Invalid email or password.");
         }
 
         public async Task SignOutAsync()
@@ -74,7 +74,7 @@ namespace CoreX.Application.Services
 
             if (existingUser != null)
             {
-                throw new Exception("User with this email already exists");
+                throw new InvalidOperationException("User with this email already exists.");
             }
 
             ApplicationUser applicationUser = new ApplicationUser()

@@ -1,12 +1,13 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Application.ServiceInterfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoreX.UI.Controllers
 {
+    [ApiController]
     [Route("users")]
-    public class UsersController : Controller
+    public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
 
@@ -32,16 +33,6 @@ namespace CoreX.UI.Controllers
             await _userService.AdminRegisterAsync(userRegisterRequest);
 
             return Ok("Admin registered successfully");
-        }
-
-        [HttpPost("register-trainer")]
-        [Authorize(Roles = "Owner,Admin")]
-        public async Task<IActionResult> RegisterTrainer(
-            [FromBody] UserRegisterRequest userRegisterRequest)
-        {
-            await _userService.TrainerRegisterAsync(userRegisterRequest);
-
-            return Ok("Trainer registered successfully");
         }
 
         [HttpPost("login")]

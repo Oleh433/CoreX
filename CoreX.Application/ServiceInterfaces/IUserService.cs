@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 
 namespace CoreX.Application.ServiceInterfaces
 {
@@ -7,8 +7,6 @@ namespace CoreX.Application.ServiceInterfaces
         Task UserRegisterAsync(UserRegisterRequest userRegisterRequest);
 
         Task AdminRegisterAsync(UserRegisterRequest userRegisterRequest);
-
-        Task TrainerRegisterAsync(UserRegisterRequest userRegisterRequest);
 
         Task SignInAsync(UserSignInRequest userSignInRequest);
 
