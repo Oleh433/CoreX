@@ -24,4 +24,14 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
+  <Target Name="EnsureNpmInstall" BeforeTargets="BuildTailwind" Condition="!Exists('$(MSBuildProjectDirectory)/node_modules')">
+    <Message Importance="high" Text="Installing npm dependencies for Tailwind..." />
+    <Exec Command="npm install" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
+  <Target Name="BuildTailwind" BeforeTargets="Build" Inputs="Styles/site.css;tailwind.config.js;@(Compile);Pages/**/*.cshtml" Outputs="wwwroot/css/site.css">
+    <Message Importance="high" Text="Building Tailwind CSS..." />
+    <Exec Command="npx tailwindcss -i ./Styles/site.css -o ./wwwroot/css/site.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
 </Project>
