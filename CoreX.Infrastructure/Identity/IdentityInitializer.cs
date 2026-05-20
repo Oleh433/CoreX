@@ -43,37 +43,44 @@ namespace CoreX.Infrastructure.Identity
 
         public async Task AddOwnerAsync()
         {
-            IEnumerable<ApplicationUser> owners = await _userManager.GetUsersInRoleAsync(RoleOptions.Owner.ToString());
+            var ownerEmail = _configuration["Owner:Email"]?.Trim();
+            var ownerPassword = _configuration["Owner:Password"]?.Trim();
 
-            if (owners.Count() == 0)
+            if (string.IsNullOrWhiteSpace(ownerEmail) || string.IsNullOrWhiteSpace(ownerPassword))
             {
-                var ownerEmail = _configuration["Owner:Email"]?.Trim();
-                var ownerPassword = _configuration["Owner:Password"]?.Trim();
-
-                if (string.IsNullOrWhiteSpace(ownerEmail) || string.IsNullOrWhiteSpace(ownerPassword))
-                {
-                    throw new InvalidOperationException(
-                        "Owner seeding requires both 'Owner:Email' and 'Owner:Password' configuration values to be set.");
-                }
-
-                ApplicationUser user = new()
-                {
-                    Email = ownerEmail,
-                    UserName = ownerEmail,
-                    FullName = "System Owner"
-                };
-
-                var createResult = await _userManager.CreateAsync(user, ownerPassword);
-
-                if (!createResult.Succeeded)
-                {
-                    throw new InvalidOperationException(
-                        "Failed to seed owner account: " +
-                        string.Join(", ", createResult.Errors.Select(e => e.Description)));
-                }
-
-                await _userManager.AddToRoleAsync(user, RoleOptions.Owner.ToString());
+                throw new InvalidOperationException(
+                    "Owner seeding requires both 'Owner:Email' and 'Owner:Password' configuration values to be set.");
             }
+
+            var existing = await _userManager.FindByEmailAsync(ownerEmail);
+
+            if (existing != null)
+            {
+                if (!await _userManager.IsInRoleAsync(existing, RoleOptions.Owner.ToString()))
+                {
+                    await _userManager.AddToRoleAsync(existing, RoleOptions.Owner.ToString());
+                }
+
+                return;
+            }
+
+            ApplicationUser user = new()
+            {
+                Email = ownerEmail,
+                UserName = ownerEmail,
+                FullName = "System Owner"
+            };
+
+            var createResult = await _userManager.CreateAsync(user, ownerPassword);
+
+            if (!createResult.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    "Failed to seed owner account: " +
+                    string.Join(", ", createResult.Errors.Select(e => e.Description)));
+            }
+
+            await _userManager.AddToRoleAsync(user, RoleOptions.Owner.ToString());
         }
     }
 }

@@ -44,6 +44,13 @@ namespace CoreX.UI.Controllers
             if (booking == null)
                 return NotFound();
 
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var isPrivileged = User.IsInRole("Admin") || User.IsInRole("Owner");
+
+            if (!isPrivileged && booking.UserId != userId)
+                return Forbid();
+
             return booking;
         }
 

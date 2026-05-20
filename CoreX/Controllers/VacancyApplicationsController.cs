@@ -2,6 +2,7 @@ using CoreX.Application.DTO;
 using CoreX.Application.ServiceInterfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CoreX.UI.Controllers
 {
@@ -42,7 +43,14 @@ namespace CoreX.UI.Controllers
         [HttpPost]
         public async Task<ActionResult<Guid>> Apply([FromBody] CreateVacancyApplicationDto dto)
         {
-            var id = await _service.ApplyAsync(dto);
+            Guid? applicantId = null;
+
+            var claim = User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (Guid.TryParse(claim, out var parsed))
+                applicantId = parsed;
+
+            var id = await _service.ApplyAsync(dto, applicantId);
 
             return CreatedAtAction(nameof(GetById), new { id }, id);
         }

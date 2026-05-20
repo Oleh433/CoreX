@@ -54,6 +54,24 @@ namespace CoreX.UI.Controllers
             return ok ? NoContent() : NotFound();
         }
 
+        [HttpPost("{id}/activate")]
+        [Authorize(Roles = "Owner")]
+        public async Task<IActionResult> Activate(Guid id)
+        {
+            var ok = await _subscriptionService.ActivateAsync(id);
+
+            return ok ? NoContent() : NotFound();
+        }
+
+        [HttpPost("{id}/deactivate")]
+        [Authorize(Roles = "Owner")]
+        public async Task<IActionResult> Deactivate(Guid id)
+        {
+            var ok = await _subscriptionService.DeactivateAsync(id);
+
+            return ok ? NoContent() : NotFound();
+        }
+
         [HttpDelete("{id}")]
         [Authorize(Roles = "Owner")]
         public async Task<IActionResult> Delete(Guid id)

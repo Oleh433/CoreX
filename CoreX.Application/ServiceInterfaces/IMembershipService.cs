@@ -12,7 +12,7 @@ namespace CoreX.Application.ServiceInterfaces
 
         Task<List<MembershipResponseDto>> GetByClubIdAsync(Guid clubId);
 
-        Task<Guid> CreateAsync(CreateMembershipDto dto);
+        Task<Guid> CreateAsync(Guid userId, CreateMembershipDto dto);
 
         Task<bool> DeleteAsync(Guid membershipId);
     }

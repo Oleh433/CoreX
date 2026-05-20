@@ -103,6 +103,38 @@ namespace CoreX.Application.Services
             return true;
         }
 
+        public async Task<bool> ActivateAsync(Guid id)
+        {
+            var subscription = await _subscriptionRepository.GetByIdAsync(id);
+
+            if (subscription == null)
+                return false;
+
+            subscription.Activate();
+
+            _subscriptionRepository.Update(subscription);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeactivateAsync(Guid id)
+        {
+            var subscription = await _subscriptionRepository.GetByIdAsync(id);
+
+            if (subscription == null)
+                return false;
+
+            subscription.Deactivate();
+
+            _subscriptionRepository.Update(subscription);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
+
         public async Task<bool> DeleteAsync(Guid subscriptionId)
         {
             var subscription = await _subscriptionRepository.GetByIdAsync(subscriptionId);

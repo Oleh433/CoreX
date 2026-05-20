@@ -8,7 +8,7 @@ namespace CoreX.Application.DTO
 
         public string? VacancyTitle { get; set; }
 
-        public Guid ApplicantId { get; set; }
+        public Guid? ApplicantId { get; set; }
 
         public string FullName { get; set; } = default!;
 

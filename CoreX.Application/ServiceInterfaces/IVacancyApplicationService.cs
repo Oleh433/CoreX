@@ -12,7 +12,7 @@ namespace CoreX.Application.ServiceInterfaces
 
         Task<List<VacancyApplicationResponseDto>> GetByApplicantIdAsync(Guid applicantId);
 
-        Task<Guid> ApplyAsync(CreateVacancyApplicationDto dto);
+        Task<Guid> ApplyAsync(CreateVacancyApplicationDto dto, Guid? applicantId = null);
 
         Task<bool> ChangeStatusAsync(Guid id, ChangeVacancyApplicationStatusDto dto);
 

@@ -4,8 +4,6 @@ namespace CoreX.Application.DTO
     {
         public Guid VacancyId { get; set; }
 
-        public Guid ApplicantId { get; set; }
-
         public string FullName { get; set; } = default!;
 
         public string Email { get; set; } = default!;

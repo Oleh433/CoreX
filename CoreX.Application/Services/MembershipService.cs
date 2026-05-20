@@ -57,22 +57,22 @@ namespace CoreX.Application.Services
                 .ToList();
         }
 
-        public async Task<Guid> CreateAsync(CreateMembershipDto dto)
+        public async Task<Guid> CreateAsync(Guid userId, CreateMembershipDto dto)
         {
-            if (dto.UserId == Guid.Empty)
+            if (userId == Guid.Empty)
                 throw new ArgumentException("UserId is required.");
 
             if (dto.ClubId == Guid.Empty)
                 throw new ArgumentException("ClubId is required.");
 
             var existing = await _membershipRepository
-                .GetActiveMembershipAsync(dto.UserId, dto.ClubId);
+                .GetActiveMembershipAsync(userId, dto.ClubId);
 
             if (existing != null)
                 throw new InvalidOperationException("User already has active membership in this club.");
 
             var membership = new Membership(
-                userId: dto.UserId,
+                userId: userId,
                 clubId: dto.ClubId,
                 subscriptionId: dto.SubscriptionId
             );

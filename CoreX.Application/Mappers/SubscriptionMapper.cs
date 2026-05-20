@@ -15,7 +15,8 @@ namespace CoreX.Application.Mappers
                 Description = subscription.Description,
                 Price = subscription.Price,
                 DurationDays = subscription.DurationDays,
-                VisitsLimit = subscription.VisitsLimit
+                VisitsLimit = subscription.VisitsLimit,
+                IsActive = subscription.IsActive
             };
         }
     }

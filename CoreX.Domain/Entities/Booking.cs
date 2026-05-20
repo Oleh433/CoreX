@@ -25,7 +25,8 @@ namespace CoreX.Domain.Entities
         [ForeignKey(nameof(ClubId))]
         public Club? Club { get; private set; }
 
-        public Guid? SubscriptionId { get; private set; }
+        [Required]
+        public Guid SubscriptionId { get; private set; }
 
         [ForeignKey(nameof(SubscriptionId))]
         public Subscription? Subscription { get; private set; }
@@ -65,12 +66,15 @@ namespace CoreX.Domain.Entities
         public Booking(
             Guid userId,
             Guid clubId,
+            Guid subscriptionId,
             string contactFullName,
             string contactEmail,
             string contactPhone,
-            Guid? subscriptionId,
             Guid? discountId = null)
         {
+            if (subscriptionId == Guid.Empty)
+                throw new ArgumentException("SubscriptionId is required.");
+
             Id = Guid.NewGuid();
 
             UserId = userId;

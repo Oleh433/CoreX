@@ -1,4 +1,4 @@
-﻿namespace CoreX.Application.DTO
+namespace CoreX.Application.DTO
 {
     public class SubscriptionResponseDto
     {
@@ -15,5 +15,7 @@
         public int DurationDays { get; set; }
 
         public int? VisitsLimit { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }

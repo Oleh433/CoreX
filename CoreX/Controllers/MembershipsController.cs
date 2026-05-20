@@ -52,9 +52,7 @@ namespace CoreX.UI.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            dto.UserId = userId;
-
-            var id = await _membershipService.CreateAsync(dto);
+            var id = await _membershipService.CreateAsync(userId, dto);
 
             return CreatedAtAction(nameof(GetById), new { id }, id);
         }

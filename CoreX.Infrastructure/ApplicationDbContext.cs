@@ -26,6 +26,12 @@ namespace CoreX.Infrastructure
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Booking>().ToTable("Bookings");
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.Subscription)
+                .WithMany()
+                .HasForeignKey(b => b.SubscriptionId)
+                .OnDelete(DeleteBehavior.NoAction);
             modelBuilder.Entity<Club>().ToTable("Clubs");
             modelBuilder.Entity<Discount>().ToTable("Discounts");
             modelBuilder.Entity<Membership>().ToTable("Memberships");

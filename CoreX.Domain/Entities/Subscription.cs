@@ -33,6 +33,9 @@ namespace CoreX.Domain.Entities
         [Range(1, 100)]
         public int? VisitsLimit { get; private set; }
 
+        [Required]
+        public bool IsActive { get; private set; }
+
         protected Subscription() { }
 
         public Subscription(
@@ -52,6 +55,7 @@ namespace CoreX.Domain.Entities
             DurationDays = durationDays;
             VisitsLimit = visitsLimit;
             Description = description;
+            IsActive = true;
         }
 
         public void Update(
@@ -72,6 +76,16 @@ namespace CoreX.Domain.Entities
             DurationDays = durationDays;
             VisitsLimit = visitsLimit;
             Description = description;
+        }
+
+        public void Deactivate()
+        {
+            IsActive = false;
+        }
+
+        public void Activate()
+        {
+            IsActive = true;
         }
     }
 }

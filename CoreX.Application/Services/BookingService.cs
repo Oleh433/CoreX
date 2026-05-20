@@ -62,13 +62,16 @@ namespace CoreX.Application.Services
             if (dto.ClubId == Guid.Empty)
                 throw new ArgumentException("ClubId is required.");
 
+            if (dto.SubscriptionId == Guid.Empty)
+                throw new ArgumentException("SubscriptionId is required.");
+
             var booking = new Booking(
                 userId: userId,
                 clubId: dto.ClubId,
+                subscriptionId: dto.SubscriptionId,
                 contactFullName: dto.ContactFullName,
                 contactEmail: dto.ContactEmail,
                 contactPhone: dto.ContactPhone,
-                subscriptionId: dto.SubscriptionId,
                 discountId: dto.DiscountId
             );
 

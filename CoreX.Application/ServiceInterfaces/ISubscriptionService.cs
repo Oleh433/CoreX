@@ -14,6 +14,10 @@ namespace CoreX.Application.ServiceInterfaces
 
         Task<bool> UpdateAsync(Guid id, UpdateSubscriptionDto dto);
 
+        Task<bool> ActivateAsync(Guid id);
+
+        Task<bool> DeactivateAsync(Guid id);
+
         Task<bool> DeleteAsync(Guid subscriptionId);
     }
 }

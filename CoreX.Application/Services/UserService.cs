@@ -97,6 +97,8 @@ namespace CoreX.Application.Services
 
             if (!roleApplyingResult.Succeeded)
             {
+                await _userManager.DeleteAsync(applicationUser);
+
                 throw new InvalidOperationException(string.Join(", ",
                     roleApplyingResult.Errors.Select(error => error.Description)));
             }

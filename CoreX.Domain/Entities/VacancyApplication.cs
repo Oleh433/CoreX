@@ -22,8 +22,7 @@ namespace CoreX.Domain.Entities
         [ForeignKey(nameof(VacancyId))]
         public Vacancy? Vacancy { get; private set; }
 
-        [Required]
-        public Guid ApplicantId { get; private set; }
+        public Guid? ApplicantId { get; private set; }
 
         [Required]
         [StringLength(100, MinimumLength = 3)]
@@ -63,8 +62,8 @@ namespace CoreX.Domain.Entities
             string fullName,
             string email,
             string phone,
-            Guid userId,
             string experience,
+            Guid? applicantId = null,
             string? message = null,
             string? cvLink = null)
         {
@@ -79,7 +78,7 @@ namespace CoreX.Domain.Entities
 
             Message = message;
             CVLink = cvLink;
-            ApplicantId = userId;
+            ApplicantId = applicantId;
 
             Status = VacancyApplicationStatus.New;
             CreatedAt = DateTime.UtcNow;

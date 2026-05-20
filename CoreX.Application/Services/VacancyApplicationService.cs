@@ -63,7 +63,7 @@ namespace CoreX.Application.Services
                 .ToList();
         }
 
-        public async Task<Guid> ApplyAsync(CreateVacancyApplicationDto dto)
+        public async Task<Guid> ApplyAsync(CreateVacancyApplicationDto dto, Guid? applicantId = null)
         {
             var vacancy = await _vacancyRepository.GetByIdAsync(dto.VacancyId);
 
@@ -78,8 +78,8 @@ namespace CoreX.Application.Services
                 fullName: dto.FullName,
                 email: dto.Email,
                 phone: dto.Phone,
-                userId: dto.ApplicantId,
                 experience: dto.Experience,
+                applicantId: applicantId,
                 message: dto.Message,
                 cvLink: dto.CVLink
             );
