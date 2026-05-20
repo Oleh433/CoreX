@@ -28,11 +28,30 @@ namespace CoreX.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime?>("CancelledAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid>("ClubId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContactEmail")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("ContactFullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ContactPhone")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -99,6 +118,14 @@ namespace CoreX.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("PhotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("WorkingHours")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Clubs", (string)null);
@@ -127,6 +154,10 @@ namespace CoreX.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<string>("PromoCode")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -138,6 +169,81 @@ namespace CoreX.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Discounts", (string)null);
+                });
+
+            modelBuilder.Entity("CoreX.Domain.Entities.GroupClass", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Audience")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("ClubId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("TrainerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("TrainerId");
+
+                    b.ToTable("GroupClasses", (string)null);
+                });
+
+            modelBuilder.Entity("CoreX.Domain.Entities.InformationMaterial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("InformationMaterials", (string)null);
                 });
 
             modelBuilder.Entity("CoreX.Domain.Entities.Membership", b =>
@@ -551,6 +657,23 @@ namespace CoreX.Infrastructure.Migrations
                     b.Navigation("Subscription");
                 });
 
+            modelBuilder.Entity("CoreX.Domain.Entities.GroupClass", b =>
+                {
+                    b.HasOne("CoreX.Domain.Entities.Club", "Club")
+                        .WithMany("GroupClasses")
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CoreX.Domain.Entities.Trainer", "Trainer")
+                        .WithMany()
+                        .HasForeignKey("TrainerId");
+
+                    b.Navigation("Club");
+
+                    b.Navigation("Trainer");
+                });
+
             modelBuilder.Entity("CoreX.Domain.Entities.Membership", b =>
                 {
                     b.HasOne("CoreX.Domain.Entities.Club", "Club")
@@ -666,6 +789,8 @@ namespace CoreX.Infrastructure.Migrations
             modelBuilder.Entity("CoreX.Domain.Entities.Club", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("GroupClasses");
 
                     b.Navigation("Memberships");
 

@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Application.Mappers;
 using CoreX.Application.ServiceInterfaces;
 using CoreX.Domain;
@@ -28,6 +28,15 @@ namespace CoreX.Application.Services
                 return null;
 
             return SubscriptionMapper.ToDto(subscription);
+        }
+
+        public async Task<List<SubscriptionResponseDto>> GetAllAsync()
+        {
+            var subscriptions = await _subscriptionRepository.GetAllAsync();
+
+            return subscriptions
+                .Select(SubscriptionMapper.ToDto)
+                .ToList();
         }
 
         public async Task<List<SubscriptionResponseDto>> GetByClubIdAsync(Guid clubId)
@@ -67,6 +76,31 @@ namespace CoreX.Application.Services
             await _unitOfWork.SaveChangesAsync();
 
             return subscription.Id;
+        }
+
+        public async Task<bool> UpdateAsync(Guid id, UpdateSubscriptionDto dto)
+        {
+            var subscription = await _subscriptionRepository.GetByIdAsync(id);
+
+            if (subscription == null)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(dto.Title))
+                throw new ArgumentException("Title is required.");
+
+            subscription.Update(
+                title: dto.Title,
+                price: dto.Price,
+                durationDays: dto.DurationDays,
+                visitsLimit: dto.VisitsLimit,
+                description: dto.Description
+            );
+
+            _subscriptionRepository.Update(subscription);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
         }
 
         public async Task<bool> DeleteAsync(Guid subscriptionId)

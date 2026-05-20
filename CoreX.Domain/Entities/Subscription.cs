@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CoreX.Domain.Entities
@@ -46,6 +46,26 @@ namespace CoreX.Domain.Entities
             Id = Guid.NewGuid();
 
             ClubId = clubId;
+
+            Title = title;
+            Price = price;
+            DurationDays = durationDays;
+            VisitsLimit = visitsLimit;
+            Description = description;
+        }
+
+        public void Update(
+            string title,
+            decimal price,
+            int durationDays,
+            int? visitsLimit,
+            string? description)
+        {
+            if (price <= 0)
+                throw new ArgumentException("Price must be greater than 0.");
+
+            if (durationDays <= 0)
+                throw new ArgumentException("DurationDays must be greater than 0.");
 
             Title = title;
             Price = price;

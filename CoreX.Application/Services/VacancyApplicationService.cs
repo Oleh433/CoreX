@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Application.Mappers;
 using CoreX.Application.ServiceInterfaces;
 using CoreX.Domain;
@@ -12,15 +12,18 @@ namespace CoreX.Application.Services
         private readonly IVacancyApplicationRepository _applicationRepository;
         private readonly IVacancyRepository _vacancyRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IEmailSender _emailSender;
 
         public VacancyApplicationService(
             IVacancyApplicationRepository applicationRepository,
             IVacancyRepository vacancyRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IEmailSender emailSender)
         {
             _applicationRepository = applicationRepository;
             _vacancyRepository = vacancyRepository;
             _unitOfWork = unitOfWork;
+            _emailSender = emailSender;
         }
 
         public async Task<List<VacancyApplicationResponseDto>> GetAllAsync()
@@ -84,6 +87,11 @@ namespace CoreX.Application.Services
 
             await _unitOfWork.SaveChangesAsync();
 
+            await _emailSender.SendAsync(
+                application.Email,
+                "Application received",
+                $"Hello {application.FullName}, we have received your application for '{vacancy.Title}'. We will be in touch.");
+
             return application.Id;
         }
 
@@ -97,11 +105,23 @@ namespace CoreX.Application.Services
             if (!Enum.IsDefined(typeof(VacancyApplicationStatus), dto.Status))
                 throw new Exception("Invalid status value.");
 
-            application.ChangeStatus((VacancyApplicationStatus)dto.Status);
+            var newStatus = (VacancyApplicationStatus)dto.Status;
+
+            application.ChangeStatus(newStatus);
 
             _applicationRepository.Update(application);
 
             await _unitOfWork.SaveChangesAsync();
+
+            if (newStatus == VacancyApplicationStatus.Accepted || newStatus == VacancyApplicationStatus.Rejected)
+            {
+                var verb = newStatus == VacancyApplicationStatus.Accepted ? "accepted" : "rejected";
+
+                await _emailSender.SendAsync(
+                    application.Email,
+                    $"Application {verb}",
+                    $"Hello {application.FullName}, your application has been {verb}.");
+            }
 
             return true;
         }

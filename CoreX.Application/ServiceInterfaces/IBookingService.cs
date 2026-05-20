@@ -1,9 +1,4 @@
-﻿using CoreX.Application.DTO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using CoreX.Application.DTO;
 
 namespace CoreX.Application.ServiceInterfaces
 {
@@ -11,12 +6,16 @@ namespace CoreX.Application.ServiceInterfaces
     {
         Task<BookingResponseDto?> GetByIdAsync(Guid id);
 
+        Task<List<BookingResponseDto>> GetAllAsync();
+
         Task<List<BookingResponseDto>> GetByUserIdAsync(Guid userId);
+
+        Task<List<BookingResponseDto>> GetByClubIdAsync(Guid clubId);
 
         Task<Guid> CreateAsync(CreateBookingDto dto);
 
         Task<bool> ConfirmAsync(Guid bookingId);
 
-        Task<bool> CancelAsync(Guid bookingId);
+        Task<bool> CancelAsync(Guid bookingId, string? reason = null);
     }
 }

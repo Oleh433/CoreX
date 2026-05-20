@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Application.Mappers;
 using CoreX.Application.ServiceInterfaces;
 using CoreX.Domain;
@@ -11,13 +11,16 @@ namespace CoreX.Application.Services
     {
         private readonly IBookingRepository _bookingRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IEmailSender _emailSender;
 
         public BookingService(
             IBookingRepository bookingRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IEmailSender emailSender)
         {
             _bookingRepository = bookingRepository;
             _unitOfWork = unitOfWork;
+            _emailSender = emailSender;
         }
 
         public async Task<BookingResponseDto?> GetByIdAsync(Guid id)
@@ -30,9 +33,23 @@ namespace CoreX.Application.Services
             return BookingMapper.ToDto(booking);
         }
 
+        public async Task<List<BookingResponseDto>> GetAllAsync()
+        {
+            var bookings = await _bookingRepository.GetAllAsync();
+
+            return bookings.Select(BookingMapper.ToDto).ToList();
+        }
+
         public async Task<List<BookingResponseDto>> GetByUserIdAsync(Guid userId)
         {
             var bookings = await _bookingRepository.GetByUserIdAsync(userId);
+
+            return bookings.Select(BookingMapper.ToDto).ToList();
+        }
+
+        public async Task<List<BookingResponseDto>> GetByClubIdAsync(Guid clubId)
+        {
+            var bookings = await _bookingRepository.GetByClubIdAsync(clubId);
 
             return bookings.Select(BookingMapper.ToDto).ToList();
         }
@@ -48,6 +65,9 @@ namespace CoreX.Application.Services
             var booking = new Booking(
                 userId: dto.UserId,
                 clubId: dto.ClubId,
+                contactFullName: dto.ContactFullName,
+                contactEmail: dto.ContactEmail,
+                contactPhone: dto.ContactPhone,
                 subscriptionId: dto.SubscriptionId,
                 discountId: dto.DiscountId
             );
@@ -55,6 +75,11 @@ namespace CoreX.Application.Services
             await _bookingRepository.AddAsync(booking);
 
             await _unitOfWork.SaveChangesAsync();
+
+            await _emailSender.SendAsync(
+                booking.ContactEmail,
+                "Booking received",
+                $"Hello {booking.ContactFullName}, your booking #{booking.Id} has been received and is awaiting confirmation.");
 
             return booking.Id;
         }
@@ -67,7 +92,7 @@ namespace CoreX.Application.Services
                 return false;
 
             if (booking.Status != BookingStatus.New)
-                throw new Exception("Only NEW bookings can be confirmed.");
+                throw new InvalidOperationException("Only NEW bookings can be confirmed.");
 
             booking.Confirm();
 
@@ -75,10 +100,15 @@ namespace CoreX.Application.Services
 
             await _unitOfWork.SaveChangesAsync();
 
+            await _emailSender.SendAsync(
+                booking.ContactEmail,
+                "Booking confirmed",
+                $"Hello {booking.ContactFullName}, your booking #{booking.Id} has been confirmed.");
+
             return true;
         }
 
-        public async Task<bool> CancelAsync(Guid bookingId)
+        public async Task<bool> CancelAsync(Guid bookingId, string? reason = null)
         {
             var booking = await _bookingRepository.GetByIdAsync(bookingId);
 
@@ -88,11 +118,20 @@ namespace CoreX.Application.Services
             if (booking.Status == BookingStatus.Cancelled)
                 return true;
 
-            booking.Cancel();
+            booking.Cancel(reason);
 
             _bookingRepository.Update(booking);
 
             await _unitOfWork.SaveChangesAsync();
+
+            var reasonText = string.IsNullOrWhiteSpace(reason)
+                ? string.Empty
+                : $" Reason: {reason}";
+
+            await _emailSender.SendAsync(
+                booking.ContactEmail,
+                "Booking cancelled",
+                $"Hello {booking.ContactFullName}, your booking #{booking.Id} has been cancelled.{reasonText}");
 
             return true;
         }

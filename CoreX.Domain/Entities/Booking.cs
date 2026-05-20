@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CoreX.Domain.Entities
@@ -39,6 +39,23 @@ namespace CoreX.Domain.Entities
         public Discount? Discount { get; private set; }
 
         [Required]
+        [StringLength(100, MinimumLength = 3)]
+        public string ContactFullName { get; private set; } = default!;
+
+        [Required]
+        [EmailAddress]
+        [StringLength(150)]
+        public string ContactEmail { get; private set; } = default!;
+
+        [Required]
+        [Phone]
+        [StringLength(30)]
+        public string ContactPhone { get; private set; } = default!;
+
+        [StringLength(500)]
+        public string? CancellationReason { get; private set; }
+
+        [Required]
         public DateTime CreatedAt { get; private set; }
 
         public DateTime? CancelledAt { get; private set; }
@@ -48,6 +65,9 @@ namespace CoreX.Domain.Entities
         public Booking(
             Guid userId,
             Guid clubId,
+            string contactFullName,
+            string contactEmail,
+            string contactPhone,
             Guid? subscriptionId,
             Guid? discountId = null)
         {
@@ -57,6 +77,18 @@ namespace CoreX.Domain.Entities
             ClubId = clubId;
             SubscriptionId = subscriptionId;
             DiscountId = discountId;
+
+            ContactFullName = string.IsNullOrWhiteSpace(contactFullName)
+                ? throw new ArgumentException("ContactFullName is required.")
+                : contactFullName.Trim();
+
+            ContactEmail = string.IsNullOrWhiteSpace(contactEmail)
+                ? throw new ArgumentException("ContactEmail is required.")
+                : contactEmail.Trim();
+
+            ContactPhone = string.IsNullOrWhiteSpace(contactPhone)
+                ? throw new ArgumentException("ContactPhone is required.")
+                : contactPhone.Trim();
 
             Status = BookingStatus.New;
             CreatedAt = DateTime.UtcNow;
@@ -70,12 +102,13 @@ namespace CoreX.Domain.Entities
             Status = BookingStatus.Confirmed;
         }
 
-        public void Cancel()
+        public void Cancel(string? reason = null)
         {
             if (Status == BookingStatus.Completed)
                 throw new InvalidOperationException("Completed booking cannot be cancelled.");
 
             Status = BookingStatus.Cancelled;
+            CancellationReason = reason?.Trim();
             CancelledAt = DateTime.UtcNow;
         }
     }

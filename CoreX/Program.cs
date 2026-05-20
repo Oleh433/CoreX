@@ -4,13 +4,13 @@ using CoreX.Domain;
 using CoreX.Domain.IdentityEntities;
 using CoreX.Domain.RepositoryInterfaces;
 using CoreX.Infrastructure;
+using CoreX.Infrastructure.Email;
 using CoreX.Infrastructure.Identity;
 using CoreX.Infrastructure.Persistence;
 using CoreX.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using CoreX.Infrastructure.Identity;
 
 namespace CoreX
 {
@@ -38,6 +38,10 @@ namespace CoreX
 
             builder.Services.AddScoped<IMembershipRepository, MembershipRepository>();
 
+            builder.Services.AddScoped<IGroupClassRepository, GroupClassRepository>();
+
+            builder.Services.AddScoped<IInformationMaterialRepository, InformationMaterialRepository>();
+
 
             builder.Services.AddScoped<IClubService, ClubService>();
 
@@ -55,6 +59,16 @@ namespace CoreX
 
             builder.Services.AddScoped<IVacancyApplicationService, VacancyApplicationService>();
 
+            builder.Services.AddScoped<IGroupClassService, GroupClassService>();
+
+            builder.Services.AddScoped<IInformationMaterialService, InformationMaterialService>();
+
+            builder.Services.AddScoped<ITrainingPlanService, TrainingPlanService>();
+
+            builder.Services.AddScoped<IUserService, UserService>();
+
+            builder.Services.AddScoped<IEmailSender, ConsoleEmailSender>();
+
 
             builder.Services.AddScoped<IdentityInitializer>();
 
@@ -67,7 +81,20 @@ namespace CoreX
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DatabaseConnectionString"));
             });
 
-            builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
+            builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+                {
+                    options.Lockout.AllowedForNewUsers = true;
+                    options.Lockout.MaxFailedAccessAttempts = 5;
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+
+                    options.Password.RequiredLength = 8;
+                    options.Password.RequireDigit = true;
+                    options.Password.RequireUppercase = true;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequireNonAlphanumeric = false;
+
+                    options.User.RequireUniqueEmail = true;
+                })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                     .AddDefaultTokenProviders()
                         .AddUserStore<UserStore<ApplicationUser, ApplicationRole, ApplicationDbContext, Guid>>()

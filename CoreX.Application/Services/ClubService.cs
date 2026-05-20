@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Application.Mappers;
 using CoreX.Application.ServiceInterfaces;
 using CoreX.Domain;
@@ -63,7 +63,9 @@ namespace CoreX.Application.Services
                 longitude: dto.Longitude,
                 description: dto.Description,
                 phone: dto.Phone,
-                email: dto.Email
+                email: dto.Email,
+                workingHours: dto.WorkingHours,
+                photoUrl: dto.PhotoUrl
             );
 
             await _clubRepository.AddAsync(club);
@@ -71,6 +73,42 @@ namespace CoreX.Application.Services
             await _unitOfWork.SaveChangesAsync();
 
             return club.Id;
+        }
+
+        public async Task<bool> UpdateAsync(Guid id, UpdateClubDto dto)
+        {
+            var club = await _clubRepository.GetByIdAsync(id);
+
+            if (club == null)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(dto.Name))
+                throw new ArgumentException("Name is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.City))
+                throw new ArgumentException("City is required.");
+
+            if (string.IsNullOrWhiteSpace(dto.Address))
+                throw new ArgumentException("Address is required.");
+
+            club.Update(
+                name: dto.Name,
+                city: dto.City,
+                address: dto.Address,
+                latitude: dto.Latitude,
+                longitude: dto.Longitude,
+                description: dto.Description,
+                phone: dto.Phone,
+                email: dto.Email,
+                workingHours: dto.WorkingHours,
+                photoUrl: dto.PhotoUrl
+            );
+
+            _clubRepository.Update(club);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
         }
 
         public async Task<bool> DeleteAsync(Guid id)

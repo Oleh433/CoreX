@@ -62,7 +62,8 @@ namespace CoreX.Application.Services
                 endDate: dto.EndDate,
                 description: dto.Description,
                 discountPercent: dto.DiscountPercent,
-                conditions: dto.Conditions
+                conditions: dto.Conditions,
+                promoCode: dto.PromoCode
             );
 
             await _discountRepository.AddAsync(discount);
@@ -86,6 +87,7 @@ namespace CoreX.Application.Services
                 dto.Description,
                 dto.DiscountPercent,
                 dto.Conditions,
+                dto.PromoCode,
                 dto.IsActive
             );
 

@@ -50,6 +50,12 @@ namespace CoreX.Infrastructure.Identity
                 var ownerEmail = _configuration["Owner:Email"]?.Trim();
                 var ownerPassword = _configuration["Owner:Password"]?.Trim();
 
+                if (string.IsNullOrWhiteSpace(ownerEmail) || string.IsNullOrWhiteSpace(ownerPassword))
+                {
+                    throw new InvalidOperationException(
+                        "Owner seeding requires both 'Owner:Email' and 'Owner:Password' configuration values to be set.");
+                }
+
                 ApplicationUser user = new()
                 {
                     Email = ownerEmail,
@@ -57,7 +63,14 @@ namespace CoreX.Infrastructure.Identity
                     FullName = "System Owner"
                 };
 
-                await _userManager.CreateAsync(user, ownerPassword);
+                var createResult = await _userManager.CreateAsync(user, ownerPassword);
+
+                if (!createResult.Succeeded)
+                {
+                    throw new InvalidOperationException(
+                        "Failed to seed owner account: " +
+                        string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                }
 
                 await _userManager.AddToRoleAsync(user, RoleOptions.Owner.ToString());
             }

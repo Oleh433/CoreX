@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Application.Mappers;
 using CoreX.Application.ServiceInterfaces;
 using CoreX.Domain;
@@ -12,15 +12,18 @@ namespace CoreX.Application.Services
         private readonly ITrainerRepository _trainerRepository;
         private readonly IClubRepository _clubRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IEmailSender _emailSender;
 
         public TrainerService(
             ITrainerRepository trainerRepository,
             IClubRepository clubRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IEmailSender emailSender)
         {
             _trainerRepository = trainerRepository;
             _clubRepository = clubRepository;
             _unitOfWork = unitOfWork;
+            _emailSender = emailSender;
         }
 
         public async Task<List<TrainerResponseDto>> GetAllAsync()
@@ -78,6 +81,14 @@ namespace CoreX.Application.Services
 
             await _unitOfWork.SaveChangesAsync();
 
+            if (!string.IsNullOrWhiteSpace(trainer.Email))
+            {
+                await _emailSender.SendAsync(
+                    trainer.Email,
+                    "Welcome to the team",
+                    $"Hello {trainer.FullName}, you have been added as a trainer at {club.Name}.");
+            }
+
             return trainer.Id;
         }
 
@@ -115,6 +126,14 @@ namespace CoreX.Application.Services
             _trainerRepository.Delete(trainer);
 
             await _unitOfWork.SaveChangesAsync();
+
+            if (!string.IsNullOrWhiteSpace(trainer.Email))
+            {
+                await _emailSender.SendAsync(
+                    trainer.Email,
+                    "Trainer account removed",
+                    $"Hello {trainer.FullName}, your trainer record has been removed.");
+            }
 
             return true;
         }

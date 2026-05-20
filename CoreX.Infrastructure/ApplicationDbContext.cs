@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using CoreX.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using CoreX.Domain.IdentityEntities;
 
 namespace CoreX.Infrastructure
 {
-    public class ApplicationDbContext : 
+    public class ApplicationDbContext :
         IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
     {
         public DbSet<Booking> Bookings { get; set; }
@@ -16,6 +16,8 @@ namespace CoreX.Infrastructure
         public DbSet<Trainer> Trainers { get; set; }
         public DbSet<Vacancy> Vacancies { get; set; }
         public DbSet<VacancyApplication> VacancyApplications { get; set; }
+        public DbSet<GroupClass> GroupClasses { get; set; }
+        public DbSet<InformationMaterial> InformationMaterials { get; set; }
 
         public ApplicationDbContext(DbContextOptions options) : base(options) { }
 
@@ -31,6 +33,8 @@ namespace CoreX.Infrastructure
             modelBuilder.Entity<Trainer>().ToTable("Trainers");
             modelBuilder.Entity<Vacancy>().ToTable("Vacancies");
             modelBuilder.Entity<VacancyApplication>().ToTable("VacancyApplications");
+            modelBuilder.Entity<GroupClass>().ToTable("GroupClasses");
+            modelBuilder.Entity<InformationMaterial>().ToTable("InformationMaterials");
         }
     }
 }

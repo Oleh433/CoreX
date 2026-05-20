@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 
 namespace CoreX.Application.ServiceInterfaces
 {
@@ -6,9 +6,13 @@ namespace CoreX.Application.ServiceInterfaces
     {
         Task<SubscriptionResponseDto?> GetByIdAsync(Guid id);
 
+        Task<List<SubscriptionResponseDto>> GetAllAsync();
+
         Task<List<SubscriptionResponseDto>> GetByClubIdAsync(Guid clubId);
 
         Task<Guid> CreateAsync(CreateSubscriptionDto dto);
+
+        Task<bool> UpdateAsync(Guid id, UpdateSubscriptionDto dto);
 
         Task<bool> DeleteAsync(Guid subscriptionId);
     }

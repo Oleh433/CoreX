@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CoreX.Domain.Entities
@@ -22,6 +22,9 @@ namespace CoreX.Domain.Entities
         [StringLength(300)]
         public string? Conditions { get; private set; }
 
+        [StringLength(40)]
+        public string? PromoCode { get; private set; }
+
         [Required]
         public DateTime StartDate { get; private set; }
 
@@ -38,7 +41,8 @@ namespace CoreX.Domain.Entities
             DateTime endDate,
             string? description = null,
             decimal? discountPercent = null,
-            string? conditions = null)
+            string? conditions = null,
+            string? promoCode = null)
         {
             if (endDate < startDate)
                 throw new ArgumentException("EndDate must be >= StartDate.");
@@ -51,6 +55,7 @@ namespace CoreX.Domain.Entities
             EndDate = endDate;
             Conditions = conditions;
             DiscountPercent = discountPercent;
+            PromoCode = promoCode?.Trim();
 
             IsActive = true;
         }
@@ -61,6 +66,7 @@ namespace CoreX.Domain.Entities
             string? description,
             decimal? discountPercent,
             string? conditions,
+            string? promoCode,
             bool isActive)
         {
             if (endDate < startDate)
@@ -72,6 +78,7 @@ namespace CoreX.Domain.Entities
             EndDate = endDate;
             DiscountPercent = discountPercent;
             Conditions = conditions;
+            PromoCode = promoCode?.Trim();
             IsActive = isActive;
         }
     }

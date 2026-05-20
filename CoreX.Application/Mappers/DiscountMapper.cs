@@ -14,6 +14,7 @@ namespace CoreX.Application.Mappers
                 Description = discount.Description,
                 DiscountPercent = discount.DiscountPercent,
                 Conditions = discount.Conditions,
+                PromoCode = discount.PromoCode,
                 StartDate = discount.StartDate,
                 EndDate = discount.EndDate,
                 IsActive = discount.IsActive

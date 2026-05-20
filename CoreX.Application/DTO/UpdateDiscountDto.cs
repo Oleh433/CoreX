@@ -1,4 +1,4 @@
-﻿namespace CoreX.Application.DTO
+namespace CoreX.Application.DTO
 {
     public class UpdateDiscountDto
     {
@@ -9,6 +9,8 @@
         public decimal? DiscountPercent { get; set; }
 
         public string? Conditions { get; set; }
+
+        public string? PromoCode { get; set; }
 
         public DateTime StartDate { get; set; }
 

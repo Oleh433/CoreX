@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Application.ServiceInterfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +24,26 @@ namespace CoreX.UI.Controllers
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             var bookings = await _bookingService.GetByUserIdAsync(userId);
+
+            return View(bookings);
+        }
+
+        // GET: /bookings/all
+        [HttpGet("all")]
+        [Authorize(Roles = "Admin,Owner")]
+        public async Task<IActionResult> All()
+        {
+            var bookings = await _bookingService.GetAllAsync();
+
+            return View(bookings);
+        }
+
+        // GET: /bookings/by-club/{clubId}
+        [HttpGet("by-club/{clubId}")]
+        [Authorize(Roles = "Admin,Owner")]
+        public async Task<IActionResult> ByClub(Guid clubId)
+        {
+            var bookings = await _bookingService.GetByClubIdAsync(clubId);
 
             return View(bookings);
         }
@@ -59,9 +79,13 @@ namespace CoreX.UI.Controllers
 
             var bookingId = await _bookingService.CreateAsync(new CreateBookingDto
             {
+                UserId = userId,
                 ClubId = dto.ClubId,
                 SubscriptionId = dto.SubscriptionId,
-                DiscountId = dto.DiscountId
+                DiscountId = dto.DiscountId,
+                ContactFullName = dto.ContactFullName,
+                ContactEmail = dto.ContactEmail,
+                ContactPhone = dto.ContactPhone
             });
 
             return RedirectToAction("Details", new { id = bookingId });
@@ -69,6 +93,7 @@ namespace CoreX.UI.Controllers
 
         // POST: /bookings/confirm/{id}
         [HttpPost("confirm/{id}")]
+        [Authorize(Roles = "Admin,Owner")]
         public async Task<IActionResult> Confirm(Guid id)
         {
             await _bookingService.ConfirmAsync(id);
@@ -78,9 +103,10 @@ namespace CoreX.UI.Controllers
 
         // POST: /bookings/cancel/{id}
         [HttpPost("cancel/{id}")]
-        public async Task<IActionResult> Cancel(Guid id)
+        [Authorize(Roles = "Admin,Owner")]
+        public async Task<IActionResult> Cancel(Guid id, [FromBody] CancelBookingDto? dto)
         {
-            await _bookingService.CancelAsync(id);
+            await _bookingService.CancelAsync(id, dto?.Reason);
 
             return RedirectToAction("Details", new { id });
         }

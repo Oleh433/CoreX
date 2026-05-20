@@ -1,4 +1,4 @@
-﻿namespace CoreX.Application.DTO
+namespace CoreX.Application.DTO
 {
     public class CreateClubDto
     {
@@ -17,5 +17,9 @@
         public string? Phone { get; set; }
 
         public string? Email { get; set; }
+
+        public string? WorkingHours { get; set; }
+
+        public string? PhotoUrl { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using CoreX.Application.DTO;
+using CoreX.Application.DTO;
 using CoreX.Application.ServiceInterfaces;
 using CoreX.Domain.Enums;
 using CoreX.Domain.IdentityEntities;
@@ -13,12 +13,18 @@ namespace CoreX.Application.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly IEmailSender _emailSender;
 
-        public UserService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<ApplicationRole> roleManager)
+        public UserService(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            RoleManager<ApplicationRole> roleManager,
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+            _emailSender = emailSender;
         }
 
         public async Task UserRegisterAsync(UserRegisterRequest userRegisterRequest) =>
@@ -35,8 +41,8 @@ namespace CoreX.Application.Services
             SignInResult signInResult = await _signInManager.PasswordSignInAsync(
                 userSignInRequest.Email,
                 userSignInRequest.Password,
-                false,
-                false);
+                isPersistent: false,
+                lockoutOnFailure: true);
 
             if (signInResult.IsLockedOut)
                 throw new Exception("User is locked out");
@@ -52,10 +58,16 @@ namespace CoreX.Application.Services
         {
             await _signInManager.SignOutAsync();
         }
-        
+
 
         private async Task RegisterAsync(UserRegisterRequest userRegisterRequest, RoleOptions roleOption)
         {
+            if (!userRegisterRequest.TermsAccepted)
+                throw new InvalidOperationException("Terms of use must be accepted.");
+
+            if (userRegisterRequest.Password != userRegisterRequest.ConfirmPassword)
+                throw new InvalidOperationException("Password and ConfirmPassword do not match.");
+
             var email = userRegisterRequest.Email.Trim().ToLower();
 
             var existingUser = await _userManager.FindByEmailAsync(email);
@@ -88,6 +100,11 @@ namespace CoreX.Application.Services
                 throw new InvalidOperationException(string.Join(", ",
                     roleApplyingResult.Errors.Select(error => error.Description)));
             }
+
+            await _emailSender.SendAsync(
+                email,
+                "Registration successful",
+                $"Hello {applicationUser.FullName}, your account has been registered with role '{roleOption}'.");
         }
     }
 }

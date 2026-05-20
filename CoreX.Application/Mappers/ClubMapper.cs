@@ -1,4 +1,4 @@
-﻿using CoreX.Domain.Entities;
+using CoreX.Domain.Entities;
 using CoreX.Application.DTO;
 
 namespace CoreX.Application.Mappers
@@ -16,6 +16,8 @@ namespace CoreX.Application.Mappers
                 Description = club.Description,
                 Phone = club.Phone,
                 Email = club.Email,
+                WorkingHours = club.WorkingHours,
+                PhotoUrl = club.PhotoUrl,
                 Latitude = club.Latitude,
                 Longitude = club.Longitude
             };

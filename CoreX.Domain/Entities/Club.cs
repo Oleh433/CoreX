@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace CoreX.Domain.Entities
 {
@@ -30,6 +30,13 @@ namespace CoreX.Domain.Entities
         [StringLength(100)]
         public string? Email { get; private set; }
 
+        [StringLength(200)]
+        public string? WorkingHours { get; private set; }
+
+        [Url]
+        [StringLength(500)]
+        public string? PhotoUrl { get; private set; }
+
         [Range(-90, 90)]
         public double? Latitude { get; private set; }
 
@@ -41,6 +48,7 @@ namespace CoreX.Domain.Entities
         public ICollection<Subscription> Subscriptions { get; private set; } = new List<Subscription>();
         public ICollection<Vacancy> Vacancies { get; private set; } = new List<Vacancy>();
         public ICollection<Membership> Memberships { get; private set; } = new List<Membership>();
+        public ICollection<GroupClass> GroupClasses { get; private set; } = new List<GroupClass>();
 
         protected Club() { }
 
@@ -52,7 +60,9 @@ namespace CoreX.Domain.Entities
             double? longitude,
             string? description = null,
             string? phone = null,
-            string? email = null)
+            string? email = null,
+            string? workingHours = null,
+            string? photoUrl = null)
         {
             Id = Guid.NewGuid();
 
@@ -66,6 +76,34 @@ namespace CoreX.Domain.Entities
             Description = description;
             Phone = phone;
             Email = email;
+            WorkingHours = workingHours;
+            PhotoUrl = photoUrl;
+        }
+
+        public void Update(
+            string name,
+            string city,
+            string address,
+            double? latitude,
+            double? longitude,
+            string? description,
+            string? phone,
+            string? email,
+            string? workingHours,
+            string? photoUrl)
+        {
+            Name = name;
+            City = city;
+            Address = address;
+
+            Latitude = latitude;
+            Longitude = longitude;
+
+            Description = description;
+            Phone = phone;
+            Email = email;
+            WorkingHours = workingHours;
+            PhotoUrl = photoUrl;
         }
     }
 }
