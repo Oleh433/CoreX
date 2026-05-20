@@ -363,7 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Frontend tooling
-node_modules/
 CoreX/wwwroot/css/site.css
 
 # Superpowers brainstorming sessions
