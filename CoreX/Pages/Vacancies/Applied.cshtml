@@ -1,0 +1,21 @@
+@page
+@model CoreX.Pages.Vacancies.AppliedModel
+@{
+    ViewData["Title"] = "Заявку прийнято";
+}
+
+<section class="max-w-2xl mx-auto px-4 py-16 md:py-24 text-center">
+    <p class="text-xs font-semibold tracking-[0.2em] uppercase text-brand-500">Заявку прийнято</p>
+    <h1 class="mt-3 text-4xl md:text-5xl font-black uppercase tracking-tight">Дякуємо!</h1>
+    <p class="mt-4 text-ink-500 max-w-lg mx-auto">
+        Ми надіслали підтвердження на вашу електронну пошту. Команда клубу зв'яжеться з вами найближчим часом.
+    </p>
+    @if (Model.ApplicationId is not null)
+    {
+        <p class="mt-6 text-xs font-mono text-ink-500">Номер заявки: @Model.ApplicationId</p>
+    }
+    <div class="mt-10 flex gap-3 justify-center">
+        <a href="/" class="btn-ghost">На головну</a>
+        <a href="/Vacancies" class="btn-brand">Інші вакансії</a>
+    </div>
+</section>
