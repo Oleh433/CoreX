@@ -1,0 +1,47 @@
+@page
+@model CoreX.Pages.Admin.Clubs.IndexModel
+@{
+    ViewData["Title"] = "Клуби";
+}
+
+<div class="flex items-center justify-between">
+    <h1 class="text-2xl font-black uppercase tracking-tight">Клуби</h1>
+    <a asp-page="Create" class="btn-brand">+ Новий клуб</a>
+</div>
+
+@if (Model.Clubs.Count == 0)
+{
+    <p class="mt-6 text-ink-500">Поки немає клубів.</p>
+}
+else
+{
+    <table class="mt-6 w-full bg-white rounded-card border border-ink-200 text-sm">
+        <thead class="bg-ink-50 text-left text-xs uppercase tracking-wider text-ink-500">
+            <tr>
+                <th class="px-4 py-2">Назва</th>
+                <th class="px-4 py-2">Місто</th>
+                <th class="px-4 py-2">Адреса</th>
+                <th class="px-4 py-2 text-right">Дії</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-200">
+        @foreach (var c in Model.Clubs)
+        {
+            <tr id="row-@c.Id">
+                <td class="px-4 py-3 font-semibold">@c.Name</td>
+                <td class="px-4 py-3">@c.City</td>
+                <td class="px-4 py-3 text-ink-500">@c.Address</td>
+                <td class="px-4 py-3 text-right space-x-2">
+                    <a asp-page="Edit" asp-route-id="@c.Id" class="text-brand-500 hover:underline">Редагувати</a>
+                    <button type="button"
+                            hx-post="/Admin/Clubs?handler=Delete&id=@c.Id"
+                            hx-confirm="Видалити клуб @c.Name?"
+                            hx-target="#row-@c.Id"
+                            hx-swap="outerHTML swap:0.3s"
+                            class="text-danger hover:underline">Видалити</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

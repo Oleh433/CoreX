@@ -1,0 +1,41 @@
+@page "/Admin/Clubs/{id:guid}/Edit"
+@model CoreX.Pages.Admin.Clubs.EditModel
+@{
+    ViewData["Title"] = "Редагування клубу";
+}
+
+<h1 class="text-2xl font-black uppercase tracking-tight">Редагування клубу</h1>
+
+<form method="post" class="mt-6 max-w-2xl space-y-5" novalidate>
+    <div asp-validation-summary="ModelOnly" class="rounded-card border border-danger bg-danger/5 text-danger px-4 py-3 text-sm"></div>
+
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Назва</label>
+        <input asp-for="Input.Name" required class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
+        <span asp-validation-for="Input.Name" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Місто</label>
+        <input asp-for="Input.City" required class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.City" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Адреса</label>
+        <input asp-for="Input.Address" required class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.Address" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Телефон</label>
+        <input asp-for="Input.Phone" type="tel" class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.Phone" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Email</label>
+        <input asp-for="Input.Email" type="email" class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.Email" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Години роботи</label>
+        <input asp-for="Input.WorkingHours" class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.WorkingHours" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Фото (URL)</label>
+        <input asp-for="Input.PhotoUrl" type="url" class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.PhotoUrl" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Опис</label>
+        <textarea asp-for="Input.Description" rows="4" class="mt-1 block w-full rounded-card border-ink-200"></textarea>
+        <span asp-validation-for="Input.Description" class="mt-1 block text-sm text-danger"></span></div>
+
+    <div class="flex gap-3">
+        <button type="submit" class="btn-brand">Зберегти</button>
+        <a asp-page="Index" class="btn-ghost">Скасувати</a>
+    </div>
+</form>
