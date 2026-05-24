@@ -1,0 +1,82 @@
+@page
+@model CoreX.Pages.Admin.GroupClasses.IndexModel
+@{
+    ViewData["Title"] = "Заняття";
+}
+
+<div class="flex items-center justify-between">
+    <h1 class="text-2xl font-black uppercase tracking-tight">Заняття</h1>
+    @if (Model.SelectedClub is not null)
+    {
+        <a asp-page="Create" asp-route-clubId="@Model.SelectedClub.Id" class="btn-brand">+ Нове заняття</a>
+    }
+    else
+    {
+        <a asp-page="Create" class="btn-brand">+ Нове заняття</a>
+    }
+</div>
+
+<form method="get" class="mt-6 flex items-center gap-3">
+    <label class="text-xs font-semibold uppercase tracking-wide text-ink-800">Клуб</label>
+    <select name="clubId" onchange="this.form.submit()"
+            class="rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500">
+        <option value="">— Оберіть клуб —</option>
+        @foreach (var club in Model.Clubs)
+        {
+            if (Model.ClubId == club.Id)
+            {
+                <option value="@club.Id" selected>@club.Name</option>
+            }
+            else
+            {
+                <option value="@club.Id">@club.Name</option>
+            }
+        }
+    </select>
+</form>
+
+@if (Model.ClubId is null || Model.SelectedClub is null)
+{
+    <p class="mt-6 text-ink-500">Оберіть клуб щоб переглянути заняття.</p>
+}
+else if (Model.Classes.Count == 0)
+{
+    <p class="mt-6 text-ink-500">У цьому клубі поки немає занять.</p>
+}
+else
+{
+    <table class="mt-6 w-full bg-white rounded-card border border-ink-200 text-sm">
+        <thead class="bg-ink-50 text-left text-xs uppercase tracking-wider text-ink-500">
+            <tr>
+                <th class="px-4 py-2">Тип</th>
+                <th class="px-4 py-2">Аудиторія</th>
+                <th class="px-4 py-2">Початок</th>
+                <th class="px-4 py-2">Тривалість</th>
+                <th class="px-4 py-2">Місткість</th>
+                <th class="px-4 py-2">Тренер</th>
+                <th class="px-4 py-2 text-right">Дії</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-200">
+        @foreach (var gc in Model.Classes)
+        {
+            <tr id="row-@gc.Id">
+                <td class="px-4 py-3 font-semibold">@gc.Type</td>
+                <td class="px-4 py-3">@gc.Audience</td>
+                <td class="px-4 py-3">@gc.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
+                <td class="px-4 py-3">@gc.DurationMinutes хв</td>
+                <td class="px-4 py-3">@gc.Capacity</td>
+                <td class="px-4 py-3 text-ink-500">@(gc.TrainerFullName ?? "—")</td>
+                <td class="px-4 py-3 text-right">
+                    <button type="button"
+                            hx-post="/Admin/GroupClasses?handler=Delete&id=@gc.Id"
+                            hx-confirm="Видалити заняття @gc.Type?"
+                            hx-target="#row-@gc.Id"
+                            hx-swap="outerHTML swap:0.3s"
+                            class="text-danger hover:underline">Видалити</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

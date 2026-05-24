@@ -1,0 +1,51 @@
+@page
+@model CoreX.Pages.Admin.GroupClasses.CreateModel
+@{
+    ViewData["Title"] = "Нове заняття";
+}
+
+<h1 class="text-2xl font-black uppercase tracking-tight">Нове заняття</h1>
+
+<form method="post" class="mt-6 max-w-2xl space-y-5" novalidate>
+    <div asp-validation-summary="ModelOnly" class="rounded-card border border-danger bg-danger/5 text-danger px-4 py-3 text-sm"></div>
+
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Клуб</label>
+        <select asp-for="Input.ClubId" asp-items="Model.ClubOptions" required class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500">
+            <option value="">— Оберіть клуб —</option>
+        </select>
+        <span asp-validation-for="Input.ClubId" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Тренер (необов'язково)</label>
+        <select asp-for="Input.TrainerId" asp-items="Model.TrainerOptions" class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500">
+            <option value="">— Без тренера —</option>
+        </select>
+        <span asp-validation-for="Input.TrainerId" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Тип</label>
+        <input asp-for="Input.Type" required class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
+        <span asp-validation-for="Input.Type" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Аудиторія</label>
+        <select asp-for="Input.Audience" required class="mt-1 block w-full rounded-card border-ink-200">
+            <option value="0">Дорослі</option>
+            <option value="1">Діти</option>
+        </select>
+        <span asp-validation-for="Input.Audience" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Початок</label>
+        <input asp-for="Input.StartTime" type="datetime-local" required class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.StartTime" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Тривалість (хв)</label>
+        <input asp-for="Input.DurationMinutes" type="number" min="5" max="300" required class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.DurationMinutes" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Місткість</label>
+        <input asp-for="Input.Capacity" type="number" min="1" max="200" required class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.Capacity" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Ціна (необов'язково)</label>
+        <input asp-for="Input.Price" type="number" step="0.01" min="0" class="mt-1 block w-full rounded-card border-ink-200" />
+        <span asp-validation-for="Input.Price" class="mt-1 block text-sm text-danger"></span></div>
+    <div><label class="block text-xs font-semibold uppercase tracking-wide text-ink-800">Опис</label>
+        <textarea asp-for="Input.Description" rows="4" class="mt-1 block w-full rounded-card border-ink-200"></textarea>
+        <span asp-validation-for="Input.Description" class="mt-1 block text-sm text-danger"></span></div>
+
+    <div class="flex gap-3">
+        <button type="submit" class="btn-brand">Створити</button>
+        <a asp-page="Index" class="btn-ghost">Скасувати</a>
+    </div>
+</form>
