@@ -145,11 +145,19 @@ namespace CoreX
                     options.Password.RequireNonAlphanumeric = false;
 
                     options.User.RequireUniqueEmail = true;
+
+                    options.SignIn.RequireConfirmedEmail = false;
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                     .AddDefaultTokenProviders()
                         .AddUserStore<UserStore<ApplicationUser, ApplicationRole, ApplicationDbContext, Guid>>()
                             .AddRoleStore<RoleStore<ApplicationRole, ApplicationDbContext, Guid>>();
+
+            builder.Services.ConfigureApplicationCookie(o =>
+            {
+                o.LoginPath = "/Account/Login";
+                o.AccessDeniedPath = "/Error/403";
+            });
 
             var app = builder.Build();
 
@@ -161,6 +169,9 @@ namespace CoreX
             }
 
             app.UseRouting();
+
+            app.UseExceptionHandler("/Error");
+            app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
             app.UseStaticFiles();
 
