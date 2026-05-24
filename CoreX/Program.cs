@@ -92,7 +92,10 @@ namespace CoreX
                 options.Conventions.AuthorizePage("/Admin/Discounts/Index", "OwnerOnly");
                 options.Conventions.AuthorizePage("/Admin/Users/RegisterAdmin", "OwnerOnly");
             })
-            .AddViewLocalization();
+            .AddViewLocalization()
+            .AddDataAnnotationsLocalization(o =>
+                o.DataAnnotationLocalizerProvider = (_, factory) =>
+                    factory.Create(typeof(CoreX.Resources.SharedResource)));
 
             builder.Services.AddAuthorization(o =>
             {

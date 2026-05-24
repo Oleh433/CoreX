@@ -22,6 +22,8 @@ public class CoreXFactory : WebApplicationFactory<Program>
             });
         });
 
+        var dbName = $"CoreXTests-{Guid.NewGuid()}";
+
         builder.ConfigureServices(services =>
         {
             var descriptor = services.SingleOrDefault(
@@ -32,7 +34,7 @@ public class CoreXFactory : WebApplicationFactory<Program>
             }
 
             services.AddDbContext<ApplicationDbContext>(o =>
-                o.UseInMemoryDatabase($"CoreXTests-{Guid.NewGuid()}"));
+                o.UseInMemoryDatabase(dbName));
         });
     }
 }

@@ -24,4 +24,10 @@
   <data name="LockoutError" xml:space="preserve"><value>Account is temporarily locked. Try again in 15 minutes.</value></data>
   <data name="InvalidCredentials" xml:space="preserve"><value>Invalid email or password.</value></data>
   <data name="EmailAlreadyTaken" xml:space="preserve"><value>A user with this email already exists.</value></data>
+  <data name="Required" xml:space="preserve"><value>This field is required.</value></data>
+  <data name="EmailInvalid" xml:space="preserve"><value>Please enter a valid email address.</value></data>
+  <data name="PasswordTooShort" xml:space="preserve"><value>Password must be at least 8 characters long.</value></data>
+  <data name="FullNameLength" xml:space="preserve"><value>Name must be between 3 and 100 characters.</value></data>
+  <data name="PasswordsDoNotMatch" xml:space="preserve"><value>Passwords do not match.</value></data>
+  <data name="TermsRequired" xml:space="preserve"><value>You must accept the terms of use.</value></data>
 </root>
