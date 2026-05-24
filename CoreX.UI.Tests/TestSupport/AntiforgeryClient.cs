@@ -22,9 +22,13 @@ public static class AntiforgeryClient
             throw new InvalidOperationException($"No antiforgery token found at {url}.");
 
         var cookies = get.Headers.TryGetValues("Set-Cookie", out var values) ? values : Array.Empty<string>();
-        var afCookie = cookies.FirstOrDefault(c => c.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal))
-            ?? throw new InvalidOperationException($"No antiforgery cookie at {url}.");
-        return (match.Groups["token"].Value, afCookie.Split(';')[0]);
+        var afCookie = cookies.FirstOrDefault(c => c.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal));
+        // If the server didn't reissue the antiforgery cookie (because the client already
+        // has one in its handler's cookie jar from a previous request — e.g. after sign-in),
+        // return an empty cookie string. BuildPost relies on the handler's automatic cookie
+        // attachment in that case.
+        var cookieValue = afCookie is null ? string.Empty : afCookie.Split(';')[0];
+        return (match.Groups["token"].Value, cookieValue);
     }
 
     public static HttpRequestMessage BuildPost(
@@ -39,8 +43,17 @@ public static class AntiforgeryClient
         {
             Content = new FormUrlEncodedContent(fields),
         };
-        var cookieHeader = extraCookie is null ? antiforgeryCookie : $"{antiforgeryCookie}; {extraCookie}";
-        req.Headers.Add("Cookie", cookieHeader);
+        // If antiforgeryCookie is empty, the cookie is already in the client handler's jar
+        // (e.g. carried over from a previous request after sign-in) and will be attached
+        // automatically — skip the explicit Cookie header to avoid duplication conflicts.
+        var hasAfCookie = !string.IsNullOrEmpty(antiforgeryCookie);
+        if (hasAfCookie || extraCookie is not null)
+        {
+            var cookieHeader = hasAfCookie
+                ? (extraCookie is null ? antiforgeryCookie : $"{antiforgeryCookie}; {extraCookie}")
+                : extraCookie!;
+            req.Headers.Add("Cookie", cookieHeader);
+        }
         return req;
     }
 }
