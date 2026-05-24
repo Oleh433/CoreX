@@ -16,8 +16,7 @@ namespace CoreX.Domain.Entities
         [Key]
         public Guid Id { get; private set; }
 
-        [Required]
-        public Guid UserId { get; private set; }
+        public Guid? UserId { get; private set; }
 
         [Required]
         public Guid ClubId { get; private set; }
@@ -64,7 +63,7 @@ namespace CoreX.Domain.Entities
         protected Booking() { }
 
         public Booking(
-            Guid userId,
+            Guid? userId,
             Guid clubId,
             Guid subscriptionId,
             string contactFullName,

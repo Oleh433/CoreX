@@ -4,7 +4,7 @@ namespace CoreX.Application.DTO
     {
         public Guid Id { get; set; }
 
-        public Guid UserId { get; set; }
+        public Guid? UserId { get; set; }
 
         public Guid ClubId { get; set; }
 
