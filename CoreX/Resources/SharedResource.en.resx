@@ -10,7 +10,6 @@
   <data name="NavTrainers" xml:space="preserve"><value>Trainers</value></data>
   <data name="NavDiscounts" xml:space="preserve"><value>Promotions</value></data>
   <data name="NavVacancies" xml:space="preserve"><value>Careers</value></data>
-  <data name="NavTrainingPlan" xml:space="preserve"><value>Training Plan</value></data>
   <data name="SignIn" xml:space="preserve"><value>Sign in</value></data>
   <data name="Register" xml:space="preserve"><value>Register</value></data>
   <data name="LanguageUkrainian" xml:space="preserve"><value>Українська</value></data>
