@@ -79,4 +79,18 @@ public static class TestUsers
         // requests; the auth cookie set by the POST is now part of its store.
         return client;
     }
+
+    public static async Task<HttpClient> SignedInAsAdminAsync(CoreXFactory factory, string fullName = "Test Admin")
+    {
+        var email = $"admin-{Guid.NewGuid():N}@test";
+        await CreateAsync(factory, email, role: "Admin", fullName: fullName);
+        return await SignedInClientAsync(factory, email);
+    }
+
+    public static async Task<HttpClient> SignedInAsOwnerAsync(CoreXFactory factory, string fullName = "Test Owner")
+    {
+        var email = $"owner-{Guid.NewGuid():N}@test";
+        await CreateAsync(factory, email, role: "Owner", fullName: fullName);
+        return await SignedInClientAsync(factory, email);
+    }
 }
