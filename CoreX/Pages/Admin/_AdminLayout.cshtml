@@ -1,0 +1,60 @@
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
+@{
+    var tokens = Antiforgery.GetAndStoreTokens(Context);
+    var isOwner = User.IsInRole("Owner");
+}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"]) · CoreX Адмін</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-ink-50 min-h-screen" hx-headers='{"@tokens.HeaderName":"@tokens.RequestToken"}'>
+
+    <header class="bg-ink-900 text-white">
+        <div class="px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-sm text-ink-200 hover:text-white">← На сайт</a>
+                <span class="text-sm font-black tracking-wider uppercase">Адмін-панель</span>
+            </div>
+            <form method="post" action="/Account/Logout" class="inline">
+                <input type="hidden" name="__RequestVerificationToken" value="@tokens.RequestToken" />
+                <button type="submit" class="text-sm text-ink-200 hover:text-white">Вийти</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="flex">
+        <aside class="w-56 shrink-0 bg-white border-r border-ink-200 min-h-[calc(100vh-49px)]">
+            <nav class="p-4 text-sm space-y-1">
+                <a href="/Admin" class="block px-3 py-2 rounded-card hover:bg-ink-50 font-semibold">Огляд</a>
+                <a href="/Admin/Clubs" class="block px-3 py-2 rounded-card hover:bg-ink-50">Клуби</a>
+                <a href="/Admin/Trainers" class="block px-3 py-2 rounded-card hover:bg-ink-50">Тренери</a>
+                <a href="/Admin/GroupClasses" class="block px-3 py-2 rounded-card hover:bg-ink-50">Заняття</a>
+                <a href="/Admin/Vacancies" class="block px-3 py-2 rounded-card hover:bg-ink-50">Вакансії</a>
+                <a href="/Admin/Bookings" class="block px-3 py-2 rounded-card hover:bg-ink-50">Бронювання</a>
+                <a href="/Admin/VacancyApplications" class="block px-3 py-2 rounded-card hover:bg-ink-50">Заявки</a>
+                <a href="/Admin/InformationMaterials" class="block px-3 py-2 rounded-card hover:bg-ink-50">Інформація</a>
+                @if (isOwner)
+                {
+                    <hr class="my-3 border-ink-200" />
+                    <p class="px-3 text-xs font-semibold uppercase tracking-wider text-ink-500">Власник</p>
+                    <a href="/Admin/Subscriptions" class="block px-3 py-2 rounded-card hover:bg-ink-50">Абонементи</a>
+                    <a href="/Admin/Discounts" class="block px-3 py-2 rounded-card hover:bg-ink-50">Акції</a>
+                    <a href="/Admin/Users/RegisterAdmin" class="block px-3 py-2 rounded-card hover:bg-ink-50">Додати адміна</a>
+                }
+            </nav>
+        </aside>
+        <main class="flex-1 p-6">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/js/htmx.min.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>
