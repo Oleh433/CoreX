@@ -15,4 +15,13 @@
   <data name="LanguageUkrainian" xml:space="preserve"><value>Українська</value></data>
   <data name="LanguageEnglish" xml:space="preserve"><value>English</value></data>
   <data name="FooterCopyright" xml:space="preserve"><value>© {0} CoreX. All rights reserved.</value></data>
+  <data name="Logout" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="MyBookings" xml:space="preserve"><value>My bookings</value></data>
+  <data name="WelcomeGreeting" xml:space="preserve"><value>Hi, {0}</value></data>
+  <data name="OrSeparator" xml:space="preserve"><value>or</value></data>
+  <data name="GenericError" xml:space="preserve"><value>Something went wrong. Please try again.</value></data>
+  <data name="LockoutError" xml:space="preserve"><value>Account is temporarily locked. Try again in 15 minutes.</value></data>
+  <data name="InvalidCredentials" xml:space="preserve"><value>Invalid email or password.</value></data>
+  <data name="EmailAlreadyTaken" xml:space="preserve"><value>A user with this email already exists.</value></data>
 </root>

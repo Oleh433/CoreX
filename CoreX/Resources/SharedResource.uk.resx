@@ -15,4 +15,13 @@
   <data name="LanguageUkrainian" xml:space="preserve"><value>Українська</value></data>
   <data name="LanguageEnglish" xml:space="preserve"><value>English</value></data>
   <data name="FooterCopyright" xml:space="preserve"><value>© {0} CoreX. Усі права захищено.</value></data>
+  <data name="Logout" xml:space="preserve"><value>Вийти</value></data>
+  <data name="Profile" xml:space="preserve"><value>Профіль</value></data>
+  <data name="MyBookings" xml:space="preserve"><value>Мої бронювання</value></data>
+  <data name="WelcomeGreeting" xml:space="preserve"><value>Привіт, {0}</value></data>
+  <data name="OrSeparator" xml:space="preserve"><value>або</value></data>
+  <data name="GenericError" xml:space="preserve"><value>Щось пішло не так. Спробуйте ще раз.</value></data>
+  <data name="LockoutError" xml:space="preserve"><value>Акаунт тимчасово заблоковано. Спробуйте за 15 хвилин.</value></data>
+  <data name="InvalidCredentials" xml:space="preserve"><value>Невірна електронна адреса або пароль.</value></data>
+  <data name="EmailAlreadyTaken" xml:space="preserve"><value>Користувач з такою електронною адресою вже існує.</value></data>
 </root>
