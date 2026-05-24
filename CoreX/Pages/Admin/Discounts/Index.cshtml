@@ -1,0 +1,60 @@
+@page
+@model CoreX.Pages.Admin.Discounts.IndexModel
+@{
+    ViewData["Title"] = "Акції";
+}
+
+<div class="flex items-center justify-between">
+    <h1 class="text-2xl font-black uppercase tracking-tight">Акції</h1>
+    <a asp-page="Create" class="btn-brand">+ Нова акція</a>
+</div>
+
+@if (Model.Discounts.Count == 0)
+{
+    <p class="mt-6 text-ink-500">Поки немає акцій.</p>
+}
+else
+{
+    <table class="mt-6 w-full bg-white rounded-card border border-ink-200 text-sm">
+        <thead class="bg-ink-50 text-left text-xs uppercase tracking-wider text-ink-500">
+            <tr>
+                <th class="px-4 py-2">Назва</th>
+                <th class="px-4 py-2">Знижка %</th>
+                <th class="px-4 py-2">Початок</th>
+                <th class="px-4 py-2">Кінець</th>
+                <th class="px-4 py-2">Статус</th>
+                <th class="px-4 py-2 text-right">Дії</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-200">
+        @foreach (var d in Model.Discounts)
+        {
+            <tr id="row-@d.Id">
+                <td class="px-4 py-3 font-semibold">@d.Title</td>
+                <td class="px-4 py-3">@(d.DiscountPercent?.ToString("0.##") ?? "—")</td>
+                <td class="px-4 py-3">@(d.StartDate?.ToString("yyyy-MM-dd") ?? "—")</td>
+                <td class="px-4 py-3">@(d.EndDate?.ToString("yyyy-MM-dd") ?? "—")</td>
+                <td class="px-4 py-3">
+                    @if (d.IsActive)
+                    {
+                        <span class="text-xs font-semibold uppercase rounded-pill px-3 py-1 bg-success/10 text-success">Активна</span>
+                    }
+                    else
+                    {
+                        <span class="text-xs font-semibold uppercase rounded-pill px-3 py-1 bg-ink-200 text-ink-500">Неактивна</span>
+                    }
+                </td>
+                <td class="px-4 py-3 text-right space-x-2">
+                    <a asp-page="Edit" asp-route-id="@d.Id" class="text-brand-500 hover:underline">Редагувати</a>
+                    <button type="button"
+                            hx-post="/Admin/Discounts?handler=Delete&id=@d.Id"
+                            hx-confirm="Видалити акцію?"
+                            hx-target="#row-@d.Id"
+                            hx-swap="outerHTML swap:0.3s"
+                            class="text-danger hover:underline">Видалити</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
