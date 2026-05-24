@@ -2,334 +2,94 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship the user-facing auth flow (Login, Register, Logout) and authenticated Account pages (Profile, MyBookings) on top of the existing Identity cookie setup, with localized validation, a role-boundary integration test matrix, and a layout that shows authenticated state.
+**Goal:** Ship the user-facing auth flow (Login, Register, Logout) and authenticated Account pages (Profile, MyBookings) on top of the existing Identity cookie setup, plus a role-boundary integration test matrix.
 
-**Architecture:** Add four Razor Pages under `CoreX/Pages/Account/` calling `IUserService` directly via DI (no HTTP self-call to the existing `UsersController`). Localize all form labels and validation messages via `IStringLocalizer<SharedResource>` — `AddDataAnnotationsLocalization` is configured so that `[Required(ErrorMessage = "Required")]` on input models resolves the key against `SharedResource.{uk,en}.resx`. Extend the public layout to render a user menu when authenticated. Cover every protected page with a role × HTTP-verb integration test matrix using `WebApplicationFactory<Program>` from Phase 0.
+**Architecture:** Add four Razor Pages under `CoreX/Pages/Account/` calling `IUserService` directly via DI (no HTTP self-call to the existing `UsersController`). **All UI strings are hardcoded UA in Razor markup** — the multi-layer localization scaffold from Phase 0 was simplified away in commit `<simplify>` after the `IStringLocalizer<SharedResource>` lookup was found to be broken (manifest baseName mismatch made it render raw keys like `"NavClubs"`). The `_Layout` already shows the authenticated user menu (Profile / MyBookings / Logout) when `User.Identity.IsAuthenticated`, so no additional Task is needed for layout chrome. Phase 1 ships UA-only; bilingual support is deferred to a polish phase.
 
-**Tech Stack:** ASP.NET Core 8 Razor Pages · Identity cookie auth (existing) · `AddDataAnnotationsLocalization` against `SharedResource` · xUnit + `Microsoft.AspNetCore.Mvc.Testing` · EF Core InMemory (test override from Phase 0).
+**Tech Stack:** ASP.NET Core 8 Razor Pages · Identity cookie auth (existing) · xUnit + `Microsoft.AspNetCore.Mvc.Testing` · EF Core InMemory (test override from Phase 0).
 
-**Spec reference:** `docs/superpowers/specs/2026-05-20-frontend-design.md` — Phase 1 in §11, auth specifics in §5, validation pattern in §9, testing strategy in §10.
+**Spec reference:** `docs/superpowers/specs/2026-05-20-frontend-design.md` — Phase 1 in §11, auth specifics in §5.
 
 ---
 
 ## Prerequisites
 
-- Phase 0 merged to `master` (HEAD on `master` is `e4b89aa Improve Index hero accessibility`).
-- `dotnet build CoreX.sln` returns 0 errors (1 unrelated `CS8618` warning).
-- `dotnet test CoreX.sln` shows 2 passing tests from `CoreX.UI.Tests`.
-- `appsettings.Development.json` has `Owner:Email` and `Owner:Password` set (required by `IdentityInitializer.AddOwnerAsync`).
+- HEAD on the worktree branch carries the Phase 1 simplifications: `CoreXFactory` DB hoist, `SharedResource` layer removed, `_Layout` chrome hardcoded UA, user menu inlined.
+- `dotnet build CoreX.sln --nologo` returns 0 errors.
+- `dotnet test CoreX.UI.Tests/CoreX.UI.Tests.csproj --nologo --no-build` shows 2 passing tests from `CoreX.UI.Tests`.
 
-## Backend surface used by this phase (verified at master HEAD)
+## Backend surface used by this phase
 
 | Surface | Where | Notes |
 |---|---|---|
-| `IUserService.UserRegisterAsync(UserRegisterRequest)` | `CoreX.Application/ServiceInterfaces/IUserService.cs` | Throws `InvalidOperationException("Passwords do not match.")`, `InvalidOperationException("You must accept the terms of use.")`, `InvalidOperationException("A user with this email already exists.")`, and `InvalidOperationException` for Identity errors. Sends confirmation email on success. **Does not auto-sign-in.** |
-| `IUserService.SignInAsync(UserSignInRequest)` | same | Uses `SignInManager.PasswordSignInAsync(..., lockoutOnFailure: true)`. Throws `UnauthorizedAccessException("Account is temporarily locked due to multiple failed sign-in attempts.")`, `UnauthorizedAccessException("Account is not allowed to sign in.")`, `UnauthorizedAccessException("Invalid email or password.")`. |
+| `IUserService.UserRegisterAsync(UserRegisterRequest)` | `CoreX.Application/ServiceInterfaces/IUserService.cs` | Throws `InvalidOperationException("Passwords do not match.")`, `InvalidOperationException("You must accept the terms of use.")`, `InvalidOperationException("A user with this email already exists.")`, and `InvalidOperationException` for Identity errors. Sends a confirmation email on success. **Does not auto-sign-in.** |
+| `IUserService.SignInAsync(UserSignInRequest)` | same | `SignInManager.PasswordSignInAsync(..., lockoutOnFailure: true)`. Throws `UnauthorizedAccessException("Account is temporarily locked due to multiple failed sign-in attempts.")`, `UnauthorizedAccessException("Account is not allowed to sign in.")`, `UnauthorizedAccessException("Invalid email or password.")`. |
 | `IUserService.SignOutAsync()` | same | Calls `SignInManager.SignOutAsync()`. |
-| `UserRegisterRequest` | `CoreX.Application/DTO/UserRegisterRequest.cs` | `required` strings + `bool TermsAccepted`. Annotations: `[Required]`, `[EmailAddress]`, `[StringLength(100, MinimumLength=3/8)]`, `[Compare(nameof(Password))]`, `[Range(typeof(bool), "true", "true")]`. Messages are English-only. |
-| `UserSignInRequest` | `CoreX.Application/DTO/UserSignInRequest.cs` | Two strings, no annotations. |
+| `UserRegisterRequest` | `CoreX.Application/DTO/UserRegisterRequest.cs` | `string FullName`, `string Email`, `string Password`, `string ConfirmPassword`, `bool TermsAccepted`. |
+| `UserSignInRequest` | `CoreX.Application/DTO/UserSignInRequest.cs` | `string Email`, `string Password`. |
 | `ApplicationUser` | `CoreX.Domain/IdentityEntities/ApplicationUser.cs` | `IdentityUser<Guid>` + `string FullName`. |
-| `UserManager<ApplicationUser>` | DI | Used by pages to look up the current user. |
-| `IBookingService.GetByUserIdAsync(Guid)` | `CoreX.Application/ServiceInterfaces/IBookingService.cs` | Returns `List<BookingResponseDto>` (empty if none). DTO has IDs only — no club/subscription names. |
-| `IClubService.GetByIdAsync(Guid)`, `ISubscriptionService.GetByIdAsync(Guid)` | services | Used by MyBookings to resolve club + subscription names. |
-| Razor Pages auth conventions | `CoreX/Program.cs:85-95` | `AuthorizeFolder("/Account", "AuthenticatedOnly")`, `AllowAnonymousToPage("/Account/Login")`, `AllowAnonymousToPage("/Account/Register")`. Already in place from Phase 0. **The Phase 1 prerequisite commit `a1dd016` chains `.AddDataAnnotationsLocalization(o => o.DataAnnotationLocalizerProvider = (_, factory) => factory.Create(typeof(SharedResource)))` after `.AddViewLocalization()`.** |
+| `UserManager<ApplicationUser>` | DI | Pages look up the current user via `GetUserAsync(User)`. |
+| `IBookingService.GetByUserIdAsync(Guid)` | `CoreX.Application/ServiceInterfaces/IBookingService.cs` | Returns `List<BookingResponseDto>` (empty if none). DTO has IDs only — no club / subscription names. |
+| `IClubService.GetByIdAsync(Guid) → ClubResponseDto?` | `CoreX.Application/ServiceInterfaces/IClubService.cs` | `ClubResponseDto.Name`. |
+| `ISubscriptionService.GetByIdAsync(Guid) → SubscriptionResponseDto?` | `CoreX.Application/ServiceInterfaces/ISubscriptionService.cs` | `SubscriptionResponseDto.Title` (note: `Title`, not `Name`). |
+| Razor Pages auth conventions | `CoreX/Program.cs` | `AuthorizeFolder("/Account", "AuthenticatedOnly")`, `AllowAnonymousToPage("/Account/Login")`, `AllowAnonymousToPage("/Account/Register")`. Already in place from Phase 0. **No `Program.cs` changes in Phase 1.** |
 
-## File map
+## File map (post-simplification)
 
-**New files (paths relative to repo root):**
+**New files:**
 
 | File | Responsibility |
 |---|---|
 | `CoreX/Pages/Account/Models/LoginInput.cs` | Razor Pages input model for `/Account/Login`. |
 | `CoreX/Pages/Account/Models/RegisterInput.cs` | Razor Pages input model for `/Account/Register`. |
-| `CoreX/Pages/Account/Login.cshtml` | Login page markup. |
-| `CoreX/Pages/Account/Login.cshtml.cs` | `LoginModel`: GET renders form, POST calls `IUserService.SignInAsync`, maps `UnauthorizedAccessException` to localized form error, redirects on success. |
-| `CoreX/Pages/Account/Register.cshtml` | Register page markup. |
-| `CoreX/Pages/Account/Register.cshtml.cs` | `RegisterModel`: GET renders form, POST calls `IUserService.UserRegisterAsync` then `SignInAsync` (auto-login), maps `InvalidOperationException` to localized form error. |
-| `CoreX/Pages/Account/Logout.cshtml` | View-less page; layout renders nothing (handler returns redirect). |
-| `CoreX/Pages/Account/Logout.cshtml.cs` | `LogoutModel`: POST calls `IUserService.SignOutAsync` and redirects to `/`. GET returns 405 (POST-only). |
+| `CoreX/Pages/Account/Login.cshtml` | Login page markup (UA strings inline). |
+| `CoreX/Pages/Account/Login.cshtml.cs` | `LoginModel`: GET renders form, POST calls `IUserService.SignInAsync`, maps `UnauthorizedAccessException` to UA form error, redirects on success. |
+| `CoreX/Pages/Account/Register.cshtml` | Register page markup (UA strings inline). |
+| `CoreX/Pages/Account/Register.cshtml.cs` | `RegisterModel`: GET renders form, POST calls `IUserService.UserRegisterAsync` then `SignInAsync` (auto-login), maps `InvalidOperationException` to UA form error. |
+| `CoreX/Pages/Account/Logout.cshtml` | View-less page. |
+| `CoreX/Pages/Account/Logout.cshtml.cs` | `LogoutModel`: POST calls `IUserService.SignOutAsync` and redirects to `/`. GET redirects to `/Account/Login` (folder auth would redirect anyway). |
 | `CoreX/Pages/Account/Profile.cshtml` | Read-only profile display. |
 | `CoreX/Pages/Account/Profile.cshtml.cs` | `ProfileModel`: GET loads `ApplicationUser` via `UserManager.GetUserAsync(User)`. |
 | `CoreX/Pages/Account/MyBookings.cshtml` | List of the current user's bookings. |
-| `CoreX/Pages/Account/MyBookings.cshtml.cs` | `MyBookingsModel`: GET fetches `IBookingService.GetByUserIdAsync(userId)`, joins club + subscription names, exposes `IReadOnlyList<MyBookingRow>` to the view. |
-| `CoreX/Resources/Pages/Account/Login.uk.resx` | Login UA strings. |
-| `CoreX/Resources/Pages/Account/Login.en.resx` | Login EN strings. |
-| `CoreX/Resources/Pages/Account/Register.uk.resx` | Register UA strings. |
-| `CoreX/Resources/Pages/Account/Register.en.resx` | Register EN strings. |
-| `CoreX/Resources/Pages/Account/Profile.uk.resx` | Profile UA strings. |
-| `CoreX/Resources/Pages/Account/Profile.en.resx` | Profile EN strings. |
-| `CoreX/Resources/Pages/Account/MyBookings.uk.resx` | MyBookings UA strings. |
-| `CoreX/Resources/Pages/Account/MyBookings.en.resx` | MyBookings EN strings. |
-| `CoreX.UI.Tests/TestSupport/TestUsers.cs` | Scope-resolved helpers: create users with role, build authenticated `HttpClient`. |
-| `CoreX.UI.Tests/TestSupport/AntiforgeryClient.cs` | Helpers that fetch a Razor Pages form and replay the `__RequestVerificationToken` on POST. |
+| `CoreX/Pages/Account/MyBookings.cshtml.cs` | `MyBookingsModel`: GET fetches `IBookingService.GetByUserIdAsync(userId)` and joins club / subscription names through `IClubService` / `ISubscriptionService`. |
+| `CoreX.UI.Tests/TestSupport/AntiforgeryClient.cs` | (Already landed in Task 3 commit `2123fb8`.) |
+| `CoreX.UI.Tests/TestSupport/TestUsers.cs` | (Already landed in Task 3 commit `2123fb8`.) |
 | `CoreX.UI.Tests/Pages/Account/LoginTests.cs` | TDD tests for Login. |
 | `CoreX.UI.Tests/Pages/Account/RegisterTests.cs` | TDD tests for Register. |
 | `CoreX.UI.Tests/Pages/Account/LogoutTests.cs` | TDD tests for Logout. |
 | `CoreX.UI.Tests/Pages/Account/ProfileTests.cs` | TDD tests for Profile. |
-| `CoreX.UI.Tests/Pages/Account/MyBookingsTests.cs` | TDD tests for MyBookings (empty + populated). |
-| `CoreX.UI.Tests/Pages/Account/AuthPolicyMatrixTests.cs` | Role × verb × page matrix (Theory-driven). |
+| `CoreX.UI.Tests/Pages/Account/MyBookingsTests.cs` | TDD tests for MyBookings (empty state). |
+| `CoreX.UI.Tests/Pages/Account/AuthPolicyMatrixTests.cs` | Role × page matrix (anon redirected to login; any role can load own Account pages). |
 
-**Modified files:**
+**Not created (simplification):**
 
-| File | Change |
-|---|---|
-| `CoreX/Pages/Shared/_Layout.cshtml` | Drop `/TrainingPlan` nav link (left over from Phase 0). Add user menu: when `User.Identity!.IsAuthenticated`, show "Привіт, {FullName}" + Profile + MyBookings + Logout (POST form); otherwise show the existing Sign in / Register links. |
-| `CoreX/Resources/SharedResource.uk.resx` | Drop `NavTrainingPlan`. Add `Logout`, `Profile`, `MyBookings`, `WelcomeGreeting` (format string with `{0}`), `OrSeparator`, `AltLoginCta`, `AltRegisterCta`. |
-| `CoreX/Resources/SharedResource.en.resx` | Same key set, English values. |
+- No `Resources/Pages/Account/*.{uk,en}.resx` — auth strings live in the Razor markup.
+- No `ValidationMessages.*` class or resource.
+- No additional `Program.cs` registrations.
 
-**Out of scope for Phase 1 (handled in later phases):**
+**Out of scope for Phase 1:**
 
-- Forgot-password / email-confirmation flow (existing `ConsoleEmailSender` is enough; the link inside the email is created by `IUserService.UserRegisterAsync` but no public page consumes it yet — Phase 6 polish).
+- Forgot-password / email-confirmation public pages.
 - 2FA, external logins, account deletion.
-- Editable profile (read-only in Phase 1).
-- TrainingPlan-related pages: out of frontend scope entirely (backend service stays untouched).
-- `IBookingService.CreateAsync` signature change: Phase 3.
-- `/Account/MyBookings` row actions (cancel / re-book): just the list in Phase 1.
+- Editable profile.
+- `IBookingService.CreateAsync(Guid?, …)` signature change (Phase 3).
+- `/Account/MyBookings` row actions (cancel / rebook).
+- TrainingPlan-related pages (out of frontend scope entirely).
+- EN localization of auth pages (deferred to polish).
 
 ---
 
-## Task 1 — Clean up TrainingPlan from Phase 0
+## Task 1 — Drop TrainingPlan nav link  ✅ landed
 
-**Files:**
-- Modify: `CoreX/Pages/Shared/_Layout.cshtml`
-- Modify: `CoreX/Resources/SharedResource.uk.resx`
-- Modify: `CoreX/Resources/SharedResource.en.resx`
+Already implemented in commit `505df07`. Removed the `/TrainingPlan` link from `_Layout.cshtml` and the `NavTrainingPlan` key from `SharedResource.{uk,en}.resx` (those resx files have since been deleted by the simplification commit).
 
-Phase 0 added a `/TrainingPlan` nav link before the scope change to drop TrainingPlan from the frontend. Remove the link and the corresponding resource key now so the rest of Phase 1 doesn't carry a dead reference.
+## Task 2 — Shared chrome + auth strings  ✅ superseded by simplification
 
-- [ ] **Step 1: Remove the nav link**
+Originally added a 9-key auth-chrome block plus 6 validation keys to `SharedResource.{uk,en}.resx`, plus `AddDataAnnotationsLocalization` wiring in Program.cs. **All of that was removed in the simplification commit.** Chrome strings are now hardcoded UA in `_Layout.cshtml`; validation messages on input models will be hardcoded UA `ErrorMessage` strings.
 
-In `CoreX/Pages/Shared/_Layout.cshtml`, locate the nav block and delete the line:
+## Task 3 — Test infrastructure (AntiforgeryClient + TestUsers)  ✅ landed
 
-```html
-<a href="/TrainingPlan">@S["NavTrainingPlan"]</a>
-```
-
-(Leave neighbouring nav links intact.)
-
-- [ ] **Step 2: Drop the resource key — UA**
-
-In `CoreX/Resources/SharedResource.uk.resx`, delete the entire `<data name="NavTrainingPlan" xml:space="preserve">...</data>` block.
-
-- [ ] **Step 3: Drop the resource key — EN**
-
-Same edit in `CoreX/Resources/SharedResource.en.resx`.
-
-- [ ] **Step 4: Verify build is still clean**
-
-```bash
-dotnet build CoreX.sln --nologo
-```
-
-Expected: 0 errors. (Existing CS8618 warning is unrelated.)
-
-- [ ] **Step 5: Verify existing Phase 0 tests still pass**
-
-```bash
-dotnet test CoreX.UI.Tests/CoreX.UI.Tests.csproj --nologo --no-build
-```
-
-Expected: 2 passing, 0 failing.
-
-- [ ] **Step 6: Commit**
-
-```bash
-git add CoreX/Pages/Shared/_Layout.cshtml CoreX/Resources/SharedResource.uk.resx CoreX/Resources/SharedResource.en.resx
-git commit -m "Drop TrainingPlan nav link (out of frontend scope)"
-```
-
----
-
-## Task 2 — Shared auth chrome keys + localized validation strategy (already implemented)
-
-**Already landed in commits `764f761` + `a1dd016`.** Captured here so the rest of the plan reads end-to-end.
-
-The original plan stored validation messages in a separate `ValidationMessages` resource type with the marker-class pattern. That pattern requires generated static properties on the marker (the `PublicResXFileCodeGenerator` workflow); the empty marker we created throws at first DataAnnotation use. The fix-forward switched to ASP.NET Core 8's idiomatic pattern:
-
-1. **Validation message keys live in `SharedResource.{uk,en}.resx`** alongside the chrome keys, in one resource type. The 6 validation keys (`Required`, `EmailInvalid`, `PasswordTooShort`, `FullNameLength`, `PasswordsDoNotMatch`, `TermsRequired`) were merged in. The 9 auth-chrome keys (`Logout`, `Profile`, `MyBookings`, `WelcomeGreeting`, `OrSeparator`, `GenericError`, `LockoutError`, `InvalidCredentials`, `EmailAlreadyTaken`) were appended.
-
-2. **`CoreX/Program.cs` chains `.AddDataAnnotationsLocalization`** onto `AddRazorPages().AddViewLocalization()`:
-
-   ```csharp
-   .AddDataAnnotationsLocalization(o =>
-       o.DataAnnotationLocalizerProvider = (_, factory) =>
-           factory.Create(typeof(CoreX.Resources.SharedResource)));
-   ```
-
-   With this in place, `[Required(ErrorMessage = "Required")]` on an input model resolves `"Required"` against `SharedResource.{uk,en}.resx` per current culture.
-
-3. **No `ValidationMessages.cs` or `ValidationMessages.{uk,en}.resx`.** Tasks 4 / 5 below use `ErrorMessage = "<key>"` directly — not `ErrorMessageResourceType` / `ErrorMessageResourceName`.
-
-If you arrive at this task during a fresh plan replay, the merged set of `SharedResource` keys (15 entries) is on the branch already; nothing to add. Verify with:
-
-```bash
-grep -c "<data name=" CoreX/Resources/SharedResource.uk.resx
-```
-
-Expected: 26 (the 11 original Phase 0 keys + the 15 added across this revision and the earlier shared additions).
-
----
-
-## Task 3 — Test infrastructure for authenticated requests
-
-**Files:**
-- Create: `CoreX.UI.Tests/TestSupport/AntiforgeryClient.cs`
-- Create: `CoreX.UI.Tests/TestSupport/TestUsers.cs`
-
-Phase 1 tests need to (1) sign users into a real cookie session via `/Account/Login` and (2) replay the antiforgery token returned by the GET form. Both helpers live here so each test stays focused on its assertion.
-
-- [ ] **Step 1: Create `CoreX.UI.Tests/TestSupport/AntiforgeryClient.cs`**
-
-```csharp
-using System.Net;
-using System.Net.Http.Headers;
-using System.Text.RegularExpressions;
-
-namespace CoreX.UI.Tests.TestSupport;
-
-// Helpers that round-trip Razor Pages antiforgery: GET a page, scrape the
-// __RequestVerificationToken hidden input + cookie, then POST the form with
-// both the body field and the cookie attached.
-public static class AntiforgeryClient
-{
-    private static readonly Regex TokenRegex =
-        new(@"name=""__RequestVerificationToken""[^>]*value=""(?<token>[^""]+)""",
-            RegexOptions.Compiled);
-
-    public static async Task<(string Token, string Cookie)> FetchAsync(HttpClient client, string url)
-    {
-        var get = await client.GetAsync(url);
-        var html = await get.Content.ReadAsStringAsync();
-        var match = TokenRegex.Match(html);
-        if (!match.Success)
-            throw new InvalidOperationException($"No antiforgery token found at {url}.");
-
-        var cookies = get.Headers.TryGetValues("Set-Cookie", out var values) ? values : Array.Empty<string>();
-        var afCookie = cookies.FirstOrDefault(c => c.StartsWith(".AspNetCore.Antiforgery", StringComparison.Ordinal))
-            ?? throw new InvalidOperationException($"No antiforgery cookie at {url}.");
-        return (match.Groups["token"].Value, afCookie.Split(';')[0]);
-    }
-
-    public static HttpRequestMessage BuildPost(
-        string url,
-        IEnumerable<KeyValuePair<string, string>> form,
-        string antiforgeryToken,
-        string antiforgeryCookie,
-        string? extraCookie = null)
-    {
-        var fields = form.Append(new("__RequestVerificationToken", antiforgeryToken));
-        var req = new HttpRequestMessage(HttpMethod.Post, url)
-        {
-            Content = new FormUrlEncodedContent(fields),
-        };
-        var cookieHeader = extraCookie is null ? antiforgeryCookie : $"{antiforgeryCookie}; {extraCookie}";
-        req.Headers.Add("Cookie", cookieHeader);
-        return req;
-    }
-}
-```
-
-- [ ] **Step 2: Create `CoreX.UI.Tests/TestSupport/TestUsers.cs`**
-
-```csharp
-using CoreX.Domain.IdentityEntities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace CoreX.UI.Tests.TestSupport;
-
-public static class TestUsers
-{
-    public const string DefaultPassword = "TestUserPass1!";
-
-    // Creates an ApplicationUser via UserManager in the factory's service scope and
-    // assigns the given role (creating the role if missing — the IdentityInitializer
-    // runs at startup so default roles already exist).
-    public static async Task<ApplicationUser> CreateAsync(
-        CoreXFactory factory,
-        string email,
-        string role,
-        string fullName = "Test User",
-        string password = DefaultPassword)
-    {
-        using var scope = factory.Services.CreateScope();
-        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-        var user = new ApplicationUser
-        {
-            Email = email,
-            UserName = email,
-            FullName = fullName,
-            EmailConfirmed = true,
-        };
-
-        var createResult = await users.CreateAsync(user, password);
-        if (!createResult.Succeeded)
-            throw new InvalidOperationException(
-                $"CreateAsync failed: {string.Join("; ", createResult.Errors.Select(e => e.Description))}");
-
-        var roleResult = await users.AddToRoleAsync(user, role);
-        if (!roleResult.Succeeded)
-            throw new InvalidOperationException(
-                $"AddToRoleAsync failed: {string.Join("; ", roleResult.Errors.Select(e => e.Description))}");
-
-        return user;
-    }
-
-    // Returns an HttpClient that has signed in via /Account/Login. The
-    // factory's HttpClient handler keeps cookies between requests when
-    // HandleCookies = true (the WebApplicationFactory default).
-    public static async Task<HttpClient> SignedInClientAsync(
-        CoreXFactory factory,
-        string email,
-        string password = DefaultPassword)
-    {
-        var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-        });
-
-        var (token, afCookie) = await AntiforgeryClient.FetchAsync(client, "/Account/Login");
-        var post = AntiforgeryClient.BuildPost(
-            "/Account/Login",
-            new Dictionary<string, string>
-            {
-                ["Input.Email"] = email,
-                ["Input.Password"] = password,
-            },
-            token,
-            afCookie);
-
-        var response = await client.SendAsync(post);
-        if (response.StatusCode != System.Net.HttpStatusCode.Redirect &&
-            response.StatusCode != System.Net.HttpStatusCode.Found)
-        {
-            var body = await response.Content.ReadAsStringAsync();
-            throw new InvalidOperationException(
-                $"Sign-in did not redirect (status {(int)response.StatusCode}). Body:\n{body}");
-        }
-
-        // CreateClient gives an HttpClient with a handler that captures cookies between
-        // requests; the auth cookie set by the POST is now part of its store.
-        return client;
-    }
-}
-```
-
-- [ ] **Step 3: Build to make sure these compile against the Phase 0 factory**
-
-```bash
-dotnet build CoreX.UI.Tests/CoreX.UI.Tests.csproj --nologo
-```
-
-Expected: 0 errors. (`Login.cshtml` doesn't exist yet, so the runtime call to `/Account/Login` will fail; that's fine — these helpers are only invoked after Task 4 lands the page.)
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add CoreX.UI.Tests/TestSupport/AntiforgeryClient.cs CoreX.UI.Tests/TestSupport/TestUsers.cs
-git commit -m "Add antiforgery + signed-in test client helpers"
-```
+Already implemented in commit `2123fb8`. The two helpers are reused by every Phase 1 test task below. The InMemoryDb sharing fix from commit `a1dd016` makes `TestUsers.CreateAsync` work across scopes.
 
 ---
 
@@ -339,8 +99,6 @@ git commit -m "Add antiforgery + signed-in test client helpers"
 - Create: `CoreX/Pages/Account/Models/LoginInput.cs`
 - Create: `CoreX/Pages/Account/Login.cshtml`
 - Create: `CoreX/Pages/Account/Login.cshtml.cs`
-- Create: `CoreX/Resources/Pages/Account/Login.uk.resx`
-- Create: `CoreX/Resources/Pages/Account/Login.en.resx`
 - Test: `CoreX.UI.Tests/Pages/Account/LoginTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
@@ -350,9 +108,7 @@ git commit -m "Add antiforgery + signed-in test client helpers"
 ```csharp
 using System.Net;
 using CoreX.UI.Tests.TestSupport;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace CoreX.UI.Tests.Pages.Account;
 
@@ -373,6 +129,7 @@ public class LoginTests : IClassFixture<CoreXFactory>
         Assert.Contains("name=\"Input.Email\"", body);
         Assert.Contains("name=\"Input.Password\"", body);
         Assert.Contains("__RequestVerificationToken", body);
+        Assert.Contains("Увійти", body);
     }
 
     [Fact]
@@ -404,7 +161,7 @@ public class LoginTests : IClassFixture<CoreXFactory>
     }
 
     [Fact]
-    public async Task Post_Login_WithInvalidPassword_ReturnsForm_WithLocalizedError()
+    public async Task Post_Login_WithInvalidPassword_ReturnsForm_WithError()
     {
         var email = $"login-bad-{Guid.NewGuid():N}@test";
         await TestUsers.CreateAsync(_factory, email, role: "User");
@@ -428,8 +185,9 @@ public class LoginTests : IClassFixture<CoreXFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadAsStringAsync();
         Assert.Contains("Невірна електронна адреса або пароль.", body);
-        Assert.DoesNotContain(response.Headers.GetValues("Set-Cookie") ?? Array.Empty<string>(),
-            c => c.StartsWith(".AspNetCore.Identity.Application", StringComparison.Ordinal));
+        Assert.False(response.Headers.TryGetValues("Set-Cookie", out var setCookies)
+            && setCookies.Any(c => c.StartsWith(".AspNetCore.Identity.Application", StringComparison.Ordinal)),
+            "No auth cookie should be set on failed sign-in.");
     }
 
     [Fact]
@@ -457,21 +215,6 @@ public class LoginTests : IClassFixture<CoreXFactory>
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal("/Account/Profile", response.Headers.Location?.OriginalString);
     }
-
-    [Fact]
-    public async Task Get_Login_WithEnglishCulture_ShowsEnglishLabels()
-    {
-        var client = _factory.CreateClient();
-        var req = new HttpRequestMessage(HttpMethod.Get, "/Account/Login");
-        req.Headers.Add("Cookie",
-            $"{CookieRequestCultureProvider.DefaultCookieName}=c=en|uic=en");
-
-        var response = await client.SendAsync(req);
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Sign in", body);
-        Assert.DoesNotContain("Увійти", body);
-    }
 }
 ```
 
@@ -481,7 +224,7 @@ public class LoginTests : IClassFixture<CoreXFactory>
 dotnet test CoreX.UI.Tests/CoreX.UI.Tests.csproj --nologo --filter "FullyQualifiedName~LoginTests"
 ```
 
-Expected: all 5 fail (Login page doesn't exist; GETs return 404; antiforgery scrape fails).
+Expected: all 4 fail (404 on GETs, "No antiforgery token found" on POSTs).
 
 - [ ] **Step 3: Create the input model**
 
@@ -494,17 +237,15 @@ namespace CoreX.Pages.Account.Models;
 
 public class LoginInput
 {
-    [Required(ErrorMessage = "Required")]
-    [EmailAddress(ErrorMessage = "EmailInvalid")]
+    [Required(ErrorMessage = "Введіть електронну пошту.")]
+    [EmailAddress(ErrorMessage = "Введіть коректну електронну адресу.")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Required")]
+    [Required(ErrorMessage = "Введіть пароль.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 }
 ```
-
-The `ErrorMessage` strings are keys looked up against `SharedResource.{uk,en}.resx` via the `AddDataAnnotationsLocalization` wiring from the prerequisite commit.
 
 - [ ] **Step 4: Create the PageModel**
 
@@ -514,23 +255,16 @@ The `ErrorMessage` strings are keys looked up against `SharedResource.{uk,en}.re
 using CoreX.Application.DTO;
 using CoreX.Application.ServiceInterfaces;
 using CoreX.Pages.Account.Models;
-using CoreX.Resources;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Localization;
 
 namespace CoreX.Pages.Account;
 
 public class LoginModel : PageModel
 {
     private readonly IUserService _users;
-    private readonly IStringLocalizer<SharedResource> _shared;
 
-    public LoginModel(IUserService users, IStringLocalizer<SharedResource> shared)
-    {
-        _users = users;
-        _shared = shared;
-    }
+    public LoginModel(IUserService users) => _users = users;
 
     [BindProperty]
     public LoginInput Input { get; set; } = new();
@@ -563,13 +297,13 @@ public class LoginModel : PageModel
         return LocalRedirect(string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl);
     }
 
-    private string MapSignInError(string serviceMessage) => serviceMessage switch
+    private static string MapSignInError(string serviceMessage) => serviceMessage switch
     {
         "Account is temporarily locked due to multiple failed sign-in attempts."
-            => _shared["LockoutError"],
+            => "Акаунт тимчасово заблоковано. Спробуйте за 15 хвилин.",
         "Account is not allowed to sign in."
-            => _shared["InvalidCredentials"],
-        _ => _shared["InvalidCredentials"],
+            => "Невірна електронна адреса або пароль.",
+        _ => "Невірна електронна адреса або пароль.",
     };
 }
 ```
@@ -582,12 +316,12 @@ public class LoginModel : PageModel
 @page
 @model CoreX.Pages.Account.LoginModel
 @{
-    ViewData["Title"] = L["Title"].Value;
+    ViewData["Title"] = "Увійти";
 }
 
 <section class="max-w-md mx-auto px-4 py-12 md:py-16">
-    <h1 class="text-3xl font-black uppercase tracking-tight">@L["Title"]</h1>
-    <p class="mt-3 text-ink-500">@L["Subtitle"]</p>
+    <h1 class="text-3xl font-black uppercase tracking-tight">Увійти</h1>
+    <p class="mt-3 text-ink-500">Раді знову бачити.</p>
 
     <form method="post" class="mt-8 space-y-5"
           asp-route-returnUrl="@Model.ReturnUrl"
@@ -596,7 +330,7 @@ public class LoginModel : PageModel
 
         <div>
             <label asp-for="Input.Email" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @L["EmailLabel"]
+                Електронна пошта
             </label>
             <input asp-for="Input.Email" autocomplete="email" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -605,64 +339,36 @@ public class LoginModel : PageModel
 
         <div>
             <label asp-for="Input.Password" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @L["PasswordLabel"]
+                Пароль
             </label>
             <input asp-for="Input.Password" type="password" autocomplete="current-password" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
             <span asp-validation-for="Input.Password" class="mt-1 block text-sm text-danger"></span>
         </div>
 
-        <button type="submit" class="btn-brand w-full">@L["Submit"]</button>
+        <button type="submit" class="btn-brand w-full">Увійти</button>
     </form>
 
     <p class="mt-6 text-sm text-ink-500 text-center">
-        @L["NoAccountPrompt"]
-        <a asp-page="/Account/Register" class="font-semibold text-brand-500 hover:underline">@L["RegisterCta"]</a>
+        Ще немає акаунту?
+        <a asp-page="/Account/Register" class="font-semibold text-brand-500 hover:underline">Зареєструватися</a>
     </p>
 </section>
 ```
 
-- [ ] **Step 6: Create the UA resources**
-
-`CoreX/Resources/Pages/Account/Login.uk.resx`:
-
-| Name | Value |
-|---|---|
-| `Title` | `Увійти` |
-| `Subtitle` | `Раді знову бачити.` |
-| `EmailLabel` | `Електронна пошта` |
-| `PasswordLabel` | `Пароль` |
-| `Submit` | `Увійти` |
-| `NoAccountPrompt` | `Ще немає акаунту?` |
-| `RegisterCta` | `Зареєструватися` |
-
-- [ ] **Step 7: Create the EN resources**
-
-`CoreX/Resources/Pages/Account/Login.en.resx`:
-
-| Name | Value |
-|---|---|
-| `Title` | `Sign in` |
-| `Subtitle` | `Welcome back.` |
-| `EmailLabel` | `Email` |
-| `PasswordLabel` | `Password` |
-| `Submit` | `Sign in` |
-| `NoAccountPrompt` | `No account yet?` |
-| `RegisterCta` | `Register` |
-
-- [ ] **Step 8: Run the tests — confirm they pass**
+- [ ] **Step 6: Run the tests — confirm they pass**
 
 ```bash
 dotnet test CoreX.UI.Tests/CoreX.UI.Tests.csproj --nologo --filter "FullyQualifiedName~LoginTests"
 ```
 
-Expected: 5 passing, 0 failing.
+Expected: 4 passing, 0 failing.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add CoreX/Pages/Account/Models/LoginInput.cs CoreX/Pages/Account/Login.cshtml CoreX/Pages/Account/Login.cshtml.cs CoreX/Resources/Pages/Account/Login.uk.resx CoreX/Resources/Pages/Account/Login.en.resx CoreX.UI.Tests/Pages/Account/LoginTests.cs
-git commit -m "Add /Account/Login with localized validation + TDD"
+git add CoreX/Pages/Account/Models/LoginInput.cs CoreX/Pages/Account/Login.cshtml CoreX/Pages/Account/Login.cshtml.cs CoreX.UI.Tests/Pages/Account/LoginTests.cs
+git commit -m "Add /Account/Login (UA, hardcoded) with TDD"
 ```
 
 ---
@@ -673,8 +379,6 @@ git commit -m "Add /Account/Login with localized validation + TDD"
 - Create: `CoreX/Pages/Account/Models/RegisterInput.cs`
 - Create: `CoreX/Pages/Account/Register.cshtml`
 - Create: `CoreX/Pages/Account/Register.cshtml.cs`
-- Create: `CoreX/Resources/Pages/Account/Register.uk.resx`
-- Create: `CoreX/Resources/Pages/Account/Register.en.resx`
 - Test: `CoreX.UI.Tests/Pages/Account/RegisterTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
@@ -684,6 +388,7 @@ git commit -m "Add /Account/Login with localized validation + TDD"
 ```csharp
 using System.Net;
 using CoreX.UI.Tests.TestSupport;
+using Xunit;
 
 namespace CoreX.UI.Tests.Pages.Account;
 
@@ -739,7 +444,7 @@ public class RegisterTests : IClassFixture<CoreXFactory>
     }
 
     [Fact]
-    public async Task Post_Register_WithMismatchedPasswords_ReturnsForm_WithLocalizedError()
+    public async Task Post_Register_WithMismatchedPasswords_ReturnsForm_WithError()
     {
         var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
         {
@@ -766,7 +471,7 @@ public class RegisterTests : IClassFixture<CoreXFactory>
     }
 
     [Fact]
-    public async Task Post_Register_WithTermsNotAccepted_ReturnsForm_WithLocalizedError()
+    public async Task Post_Register_WithTermsNotAccepted_ReturnsForm_WithError()
     {
         var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
         {
@@ -793,7 +498,7 @@ public class RegisterTests : IClassFixture<CoreXFactory>
     }
 
     [Fact]
-    public async Task Post_Register_WithDuplicateEmail_ReturnsForm_WithLocalizedError()
+    public async Task Post_Register_WithDuplicateEmail_ReturnsForm_WithError()
     {
         var email = $"reg-dup-{Guid.NewGuid():N}@test";
         await TestUsers.CreateAsync(_factory, email, role: "User");
@@ -825,11 +530,7 @@ public class RegisterTests : IClassFixture<CoreXFactory>
 
 - [ ] **Step 2: Run the tests — confirm they fail**
 
-```bash
-dotnet test CoreX.UI.Tests/CoreX.UI.Tests.csproj --nologo --filter "FullyQualifiedName~RegisterTests"
-```
-
-Expected: 5 failing (page doesn't exist).
+Expected: 5 failing.
 
 - [ ] **Step 3: Create the input model**
 
@@ -842,30 +543,28 @@ namespace CoreX.Pages.Account.Models;
 
 public class RegisterInput
 {
-    [Required(ErrorMessage = "Required")]
-    [StringLength(100, MinimumLength = 3, ErrorMessage = "FullNameLength")]
+    [Required(ErrorMessage = "Введіть повне ім'я.")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "Ім'я має містити від 3 до 100 символів.")]
     public string FullName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Required")]
-    [EmailAddress(ErrorMessage = "EmailInvalid")]
+    [Required(ErrorMessage = "Введіть електронну пошту.")]
+    [EmailAddress(ErrorMessage = "Введіть коректну електронну адресу.")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Required")]
-    [StringLength(100, MinimumLength = 8, ErrorMessage = "PasswordTooShort")]
+    [Required(ErrorMessage = "Введіть пароль.")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Пароль має містити щонайменше 8 символів.")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Required")]
+    [Required(ErrorMessage = "Підтвердіть пароль.")]
     [DataType(DataType.Password)]
-    [Compare(nameof(Password), ErrorMessage = "PasswordsDoNotMatch")]
+    [Compare(nameof(Password), ErrorMessage = "Паролі не співпадають.")]
     public string ConfirmPassword { get; set; } = string.Empty;
 
-    [Range(typeof(bool), "true", "true", ErrorMessage = "TermsRequired")]
+    [Range(typeof(bool), "true", "true", ErrorMessage = "Потрібно прийняти умови використання.")]
     public bool TermsAccepted { get; set; }
 }
 ```
-
-`ErrorMessage` strings are keys resolved against `SharedResource.{uk,en}.resx`.
 
 - [ ] **Step 4: Create the PageModel**
 
@@ -875,23 +574,16 @@ public class RegisterInput
 using CoreX.Application.DTO;
 using CoreX.Application.ServiceInterfaces;
 using CoreX.Pages.Account.Models;
-using CoreX.Resources;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Localization;
 
 namespace CoreX.Pages.Account;
 
 public class RegisterModel : PageModel
 {
     private readonly IUserService _users;
-    private readonly IStringLocalizer<SharedResource> _shared;
 
-    public RegisterModel(IUserService users, IStringLocalizer<SharedResource> shared)
-    {
-        _users = users;
-        _shared = shared;
-    }
+    public RegisterModel(IUserService users) => _users = users;
 
     [BindProperty]
     public RegisterInput Input { get; set; } = new();
@@ -930,22 +622,18 @@ public class RegisterModel : PageModel
         }
         catch (UnauthorizedAccessException)
         {
-            // Registration succeeded but auto-login didn't (lockout, etc.).
-            // Send the user to the login page instead of dead-ending here.
             return RedirectToPage("/Account/Login");
         }
 
         return LocalRedirect("/");
     }
 
-    private string MapRegisterError(string serviceMessage) => serviceMessage switch
+    private static string MapRegisterError(string serviceMessage) => serviceMessage switch
     {
-        "A user with this email already exists."
-            => _shared["EmailAlreadyTaken"],
-        // Passwords do not match / Terms not accepted are blocked by DataAnnotations first;
-        // any other service error is shown verbatim once (it's an English string from the
-        // service layer — acceptable for v1, can be expanded later as more keys are added).
-        _ => serviceMessage,
+        "A user with this email already exists." => "Користувач з такою електронною адресою вже існує.",
+        "Passwords do not match." => "Паролі не співпадають.",
+        "You must accept the terms of use." => "Потрібно прийняти умови використання.",
+        _ => "Не вдалося створити акаунт. Спробуйте ще раз.",
     };
 }
 ```
@@ -958,19 +646,19 @@ public class RegisterModel : PageModel
 @page
 @model CoreX.Pages.Account.RegisterModel
 @{
-    ViewData["Title"] = L["Title"].Value;
+    ViewData["Title"] = "Реєстрація";
 }
 
 <section class="max-w-md mx-auto px-4 py-12 md:py-16">
-    <h1 class="text-3xl font-black uppercase tracking-tight">@L["Title"]</h1>
-    <p class="mt-3 text-ink-500">@L["Subtitle"]</p>
+    <h1 class="text-3xl font-black uppercase tracking-tight">Реєстрація</h1>
+    <p class="mt-3 text-ink-500">Перетни свою межу разом з CoreX.</p>
 
     <form method="post" class="mt-8 space-y-5" novalidate>
         <div asp-validation-summary="ModelOnly" class="rounded-card border border-danger bg-danger/5 text-danger px-4 py-3 text-sm"></div>
 
         <div>
             <label asp-for="Input.FullName" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @L["FullNameLabel"]
+                Повне ім'я
             </label>
             <input asp-for="Input.FullName" autocomplete="name" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -979,7 +667,7 @@ public class RegisterModel : PageModel
 
         <div>
             <label asp-for="Input.Email" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @L["EmailLabel"]
+                Електронна пошта
             </label>
             <input asp-for="Input.Email" autocomplete="email" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -988,7 +676,7 @@ public class RegisterModel : PageModel
 
         <div>
             <label asp-for="Input.Password" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @L["PasswordLabel"]
+                Пароль
             </label>
             <input asp-for="Input.Password" type="password" autocomplete="new-password" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -997,7 +685,7 @@ public class RegisterModel : PageModel
 
         <div>
             <label asp-for="Input.ConfirmPassword" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @L["ConfirmPasswordLabel"]
+                Підтвердження пароля
             </label>
             <input asp-for="Input.ConfirmPassword" type="password" autocomplete="new-password" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -1006,66 +694,28 @@ public class RegisterModel : PageModel
 
         <label class="flex items-start gap-3 text-sm text-ink-800">
             <input asp-for="Input.TermsAccepted" type="checkbox" class="mt-1 rounded border-ink-200 text-brand-500 focus:ring-brand-500" />
-            <span>@L["TermsLabel"]</span>
+            <span>Я приймаю умови використання та політику конфіденційності.</span>
         </label>
         <span asp-validation-for="Input.TermsAccepted" class="block text-sm text-danger"></span>
 
-        <button type="submit" class="btn-brand w-full">@L["Submit"]</button>
+        <button type="submit" class="btn-brand w-full">Зареєструватися</button>
     </form>
 
     <p class="mt-6 text-sm text-ink-500 text-center">
-        @L["HaveAccountPrompt"]
-        <a asp-page="/Account/Login" class="font-semibold text-brand-500 hover:underline">@L["LoginCta"]</a>
+        Вже маєте акаунт?
+        <a asp-page="/Account/Login" class="font-semibold text-brand-500 hover:underline">Увійти</a>
     </p>
 </section>
 ```
 
-- [ ] **Step 6: Create the UA resources**
-
-`CoreX/Resources/Pages/Account/Register.uk.resx`:
-
-| Name | Value |
-|---|---|
-| `Title` | `Реєстрація` |
-| `Subtitle` | `Перетни свою межу разом з CoreX.` |
-| `FullNameLabel` | `Повне ім'я` |
-| `EmailLabel` | `Електронна пошта` |
-| `PasswordLabel` | `Пароль` |
-| `ConfirmPasswordLabel` | `Підтвердження пароля` |
-| `TermsLabel` | `Я приймаю умови використання та політику конфіденційності.` |
-| `Submit` | `Зареєструватися` |
-| `HaveAccountPrompt` | `Вже маєте акаунт?` |
-| `LoginCta` | `Увійти` |
-
-- [ ] **Step 7: Create the EN resources**
-
-`CoreX/Resources/Pages/Account/Register.en.resx`:
-
-| Name | Value |
-|---|---|
-| `Title` | `Register` |
-| `Subtitle` | `Push your limit with CoreX.` |
-| `FullNameLabel` | `Full name` |
-| `EmailLabel` | `Email` |
-| `PasswordLabel` | `Password` |
-| `ConfirmPasswordLabel` | `Confirm password` |
-| `TermsLabel` | `I accept the terms of use and privacy policy.` |
-| `Submit` | `Register` |
-| `HaveAccountPrompt` | `Already have an account?` |
-| `LoginCta` | `Sign in` |
-
-- [ ] **Step 8: Run the tests — confirm they pass**
-
-```bash
-dotnet test CoreX.UI.Tests/CoreX.UI.Tests.csproj --nologo --filter "FullyQualifiedName~RegisterTests"
-```
+- [ ] **Step 6: Run the tests — confirm they pass**
 
 Expected: 5 passing.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add CoreX/Pages/Account/Models/RegisterInput.cs CoreX/Pages/Account/Register.cshtml CoreX/Pages/Account/Register.cshtml.cs CoreX/Resources/Pages/Account/Register.uk.resx CoreX/Resources/Pages/Account/Register.en.resx CoreX.UI.Tests/Pages/Account/RegisterTests.cs
+git add CoreX/Pages/Account/Models/RegisterInput.cs CoreX/Pages/Account/Register.cshtml CoreX/Pages/Account/Register.cshtml.cs CoreX.UI.Tests/Pages/Account/RegisterTests.cs
 git commit -m "Add /Account/Register with auto-login on success + TDD"
 ```
 
@@ -1078,7 +728,7 @@ git commit -m "Add /Account/Register with auto-login on success + TDD"
 - Create: `CoreX/Pages/Account/Logout.cshtml.cs`
 - Test: `CoreX.UI.Tests/Pages/Account/LogoutTests.cs`
 
-Logout is a POST-only action triggered from the layout's user menu (Task 9). The `.cshtml` exists only so the page is discoverable by the Razor Pages routing; no body is rendered.
+Triggered by the layout's user-menu form (already inlined into `_Layout.cshtml`). The `.cshtml` exists only so Razor Pages routes the URL; no body is rendered.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1087,6 +737,7 @@ Logout is a POST-only action triggered from the layout's user menu (Task 9). The
 ```csharp
 using System.Net;
 using CoreX.UI.Tests.TestSupport;
+using Xunit;
 
 namespace CoreX.UI.Tests.Pages.Account;
 
@@ -1103,7 +754,6 @@ public class LogoutTests : IClassFixture<CoreXFactory>
         {
             AllowAutoRedirect = false,
         });
-
         var response = await client.GetAsync("/Account/Logout");
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
@@ -1117,8 +767,8 @@ public class LogoutTests : IClassFixture<CoreXFactory>
         await TestUsers.CreateAsync(_factory, email, role: "User");
         var client = await TestUsers.SignedInClientAsync(_factory, email);
 
+        // Reuse the antiforgery token / cookie from any authenticated page; Profile is convenient.
         var (token, afCookie) = await AntiforgeryClient.FetchAsync(client, "/Account/Profile");
-        // The Profile page also emits a fresh antiforgery token; reuse it for the logout POST.
         var post = AntiforgeryClient.BuildPost(
             "/Account/Logout",
             Array.Empty<KeyValuePair<string, string>>(),
@@ -1128,18 +778,15 @@ public class LogoutTests : IClassFixture<CoreXFactory>
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal("/", response.Headers.Location?.OriginalString);
-
-        // Identity emits a Set-Cookie that clears the auth cookie by setting its
-        // value to empty + an expired Expires attribute.
         Assert.Contains(response.Headers.GetValues("Set-Cookie"),
             c => c.StartsWith(".AspNetCore.Identity.Application=;", StringComparison.Ordinal));
     }
 }
 ```
 
-- [ ] **Step 2: Run the tests — confirm they fail**
+- [ ] **Step 2: Run — confirm failure**
 
-Expected: both tests fail (no page yet).
+Both fail (no page yet).
 
 - [ ] **Step 3: Create the PageModel**
 
@@ -1177,9 +824,9 @@ public class LogoutModel : PageModel
 @model CoreX.Pages.Account.LogoutModel
 ```
 
-- [ ] **Step 5: Run the tests — confirm they pass**
+- [ ] **Step 5: Run — confirm pass**
 
-Expected: 2 passing.
+Both pass.
 
 - [ ] **Step 6: Commit**
 
@@ -1195,8 +842,6 @@ git commit -m "Add /Account/Logout (POST-only) + TDD"
 **Files:**
 - Create: `CoreX/Pages/Account/Profile.cshtml`
 - Create: `CoreX/Pages/Account/Profile.cshtml.cs`
-- Create: `CoreX/Resources/Pages/Account/Profile.uk.resx`
-- Create: `CoreX/Resources/Pages/Account/Profile.en.resx`
 - Test: `CoreX.UI.Tests/Pages/Account/ProfileTests.cs`
 
 - [ ] **Step 1: Write the failing tests**
@@ -1206,6 +851,7 @@ git commit -m "Add /Account/Logout (POST-only) + TDD"
 ```csharp
 using System.Net;
 using CoreX.UI.Tests.TestSupport;
+using Xunit;
 
 namespace CoreX.UI.Tests.Pages.Account;
 
@@ -1246,8 +892,6 @@ public class ProfileTests : IClassFixture<CoreXFactory>
 ```
 
 - [ ] **Step 2: Run — confirm failure**
-
-Expected: 2 failing.
 
 - [ ] **Step 3: Create the PageModel**
 
@@ -1291,54 +935,32 @@ public class ProfileModel : PageModel
 @page
 @model CoreX.Pages.Account.ProfileModel
 @{
-    ViewData["Title"] = L["Title"].Value;
+    ViewData["Title"] = "Профіль";
 }
 
 <section class="max-w-2xl mx-auto px-4 py-12 md:py-16">
-    <p class="text-xs font-semibold tracking-[0.2em] uppercase text-brand-500">@L["Eyebrow"]</p>
+    <p class="text-xs font-semibold tracking-[0.2em] uppercase text-brand-500">Ваш акаунт</p>
     <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-tight">@Model.FullName</h1>
 
     <dl class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
         <div>
-            <dt class="text-ink-500 uppercase tracking-wide text-xs font-semibold">@L["EmailLabel"]</dt>
+            <dt class="text-ink-500 uppercase tracking-wide text-xs font-semibold">Електронна пошта</dt>
             <dd class="mt-1 text-ink-900 break-all">@Model.Email</dd>
         </div>
     </dl>
 
     <div class="mt-10 flex gap-3">
-        <a asp-page="/Account/MyBookings" class="btn-brand">@S["MyBookings"]</a>
+        <a asp-page="/Account/MyBookings" class="btn-brand">Мої бронювання</a>
     </div>
 </section>
 ```
 
-- [ ] **Step 5: Create the UA resources**
+- [ ] **Step 5: Run — confirm pass**
 
-`CoreX/Resources/Pages/Account/Profile.uk.resx`:
-
-| Name | Value |
-|---|---|
-| `Title` | `Профіль` |
-| `Eyebrow` | `Ваш акаунт` |
-| `EmailLabel` | `Електронна пошта` |
-
-- [ ] **Step 6: Create the EN resources**
-
-`CoreX/Resources/Pages/Account/Profile.en.resx`:
-
-| Name | Value |
-|---|---|
-| `Title` | `Profile` |
-| `Eyebrow` | `Your account` |
-| `EmailLabel` | `Email` |
-
-- [ ] **Step 7: Run — confirm pass**
-
-Expected: 2 passing.
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add CoreX/Pages/Account/Profile.cshtml CoreX/Pages/Account/Profile.cshtml.cs CoreX/Resources/Pages/Account/Profile.uk.resx CoreX/Resources/Pages/Account/Profile.en.resx CoreX.UI.Tests/Pages/Account/ProfileTests.cs
+git add CoreX/Pages/Account/Profile.cshtml CoreX/Pages/Account/Profile.cshtml.cs CoreX.UI.Tests/Pages/Account/ProfileTests.cs
 git commit -m "Add /Account/Profile (read-only) + TDD"
 ```
 
@@ -1349,11 +971,9 @@ git commit -m "Add /Account/Profile (read-only) + TDD"
 **Files:**
 - Create: `CoreX/Pages/Account/MyBookings.cshtml`
 - Create: `CoreX/Pages/Account/MyBookings.cshtml.cs`
-- Create: `CoreX/Resources/Pages/Account/MyBookings.uk.resx`
-- Create: `CoreX/Resources/Pages/Account/MyBookings.en.resx`
 - Test: `CoreX.UI.Tests/Pages/Account/MyBookingsTests.cs`
 
-The page joins each `BookingResponseDto` with `IClubService.GetByIdAsync` + `ISubscriptionService.GetByIdAsync` to surface human-readable club and subscription names — the DTO only carries IDs.
+The page joins each `BookingResponseDto` with `IClubService.GetByIdAsync` (returns `ClubResponseDto.Name`) and `ISubscriptionService.GetByIdAsync` (returns `SubscriptionResponseDto.Title`) so the user sees readable club + subscription names.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1361,13 +981,8 @@ The page joins each `BookingResponseDto` with `IClubService.GetByIdAsync` + `ISu
 
 ```csharp
 using System.Net;
-using CoreX.Application.DTO;
-using CoreX.Application.ServiceInterfaces;
-using CoreX.Domain.Entities;
 using CoreX.UI.Tests.TestSupport;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.DependencyInjection;
-using CoreX.Domain.IdentityEntities;
+using Xunit;
 
 namespace CoreX.UI.Tests.Pages.Account;
 
@@ -1406,18 +1021,15 @@ public class MyBookingsTests : IClassFixture<CoreXFactory>
 }
 ```
 
-(A test covering "with bookings" requires standing up a Club + Subscription + Booking in the in-memory DB via the appropriate domain entities. Add it as part of Phase 3 when bookings get a creation flow — for Phase 1 the empty-state test plus the auth redirect cover the surface this page introduces.)
+(A "with bookings" test requires standing up `Club` + `Subscription` + `Booking` entities in the in-memory DB. Add it in Phase 3 when the booking creation flow is built.)
 
 - [ ] **Step 2: Run — confirm failure**
-
-Expected: 2 failing.
 
 - [ ] **Step 3: Create the PageModel**
 
 `CoreX/Pages/Account/MyBookings.cshtml.cs`:
 
 ```csharp
-using CoreX.Application.DTO;
 using CoreX.Application.ServiceInterfaces;
 using CoreX.Domain.IdentityEntities;
 using Microsoft.AspNetCore.Identity;
@@ -1481,10 +1093,6 @@ public class MyBookingsModel : PageModel
 }
 ```
 
-Verified at master HEAD:
-- `IClubService.GetByIdAsync(Guid) → Task<ClubResponseDto?>` — `ClubResponseDto.Name` is a non-null string.
-- `ISubscriptionService.GetByIdAsync(Guid) → Task<SubscriptionResponseDto?>` — note the display field is `Title`, not `Name`.
-
 - [ ] **Step 4: Create the view**
 
 `CoreX/Pages/Account/MyBookings.cshtml`:
@@ -1493,15 +1101,15 @@ Verified at master HEAD:
 @page
 @model CoreX.Pages.Account.MyBookingsModel
 @{
-    ViewData["Title"] = L["Title"].Value;
+    ViewData["Title"] = "Мої бронювання";
 }
 
 <section class="max-w-4xl mx-auto px-4 py-12 md:py-16">
-    <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tight">@L["Title"]</h1>
+    <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tight">Мої бронювання</h1>
 
     @if (Model.Rows.Count == 0)
     {
-        <p class="mt-8 text-ink-500">@L["EmptyState"]</p>
+        <p class="mt-8 text-ink-500">Поки що бронювань немає.</p>
     }
     else
     {
@@ -1523,103 +1131,23 @@ Verified at master HEAD:
 </section>
 ```
 
-- [ ] **Step 5: Create the UA resources**
+- [ ] **Step 5: Run — confirm pass**
 
-`CoreX/Resources/Pages/Account/MyBookings.uk.resx`:
-
-| Name | Value |
-|---|---|
-| `Title` | `Мої бронювання` |
-| `EmptyState` | `Поки що бронювань немає.` |
-
-- [ ] **Step 6: Create the EN resources**
-
-`CoreX/Resources/Pages/Account/MyBookings.en.resx`:
-
-| Name | Value |
-|---|---|
-| `Title` | `My bookings` |
-| `EmptyState` | `No bookings yet.` |
-
-- [ ] **Step 7: Run — confirm pass**
-
-Expected: 2 passing.
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add CoreX/Pages/Account/MyBookings.cshtml CoreX/Pages/Account/MyBookings.cshtml.cs CoreX/Resources/Pages/Account/MyBookings.uk.resx CoreX/Resources/Pages/Account/MyBookings.en.resx CoreX.UI.Tests/Pages/Account/MyBookingsTests.cs
+git add CoreX/Pages/Account/MyBookings.cshtml CoreX/Pages/Account/MyBookings.cshtml.cs CoreX.UI.Tests/Pages/Account/MyBookingsTests.cs
 git commit -m "Add /Account/MyBookings (list + empty state) + TDD"
 ```
 
 ---
 
-## Task 9 — Layout user menu
-
-**Files:**
-- Modify: `CoreX/Pages/Shared/_Layout.cshtml`
-
-Replace the static "Sign in / Register" pair with a conditional user menu: greeting + Profile + MyBookings + Logout (POST form) when authenticated; the existing Sign in / Register links otherwise.
-
-- [ ] **Step 1: Locate the existing auth links in `_Layout.cshtml`**
-
-They look approximately like:
-
-```html
-<a asp-page="/Account/Login" class="btn-ghost">@S["SignIn"]</a>
-<a asp-page="/Account/Register" class="btn-brand">@S["Register"]</a>
-```
-
-(The exact surrounding HTML stays as-is — only the auth-action cluster changes.)
-
-- [ ] **Step 2: Replace with the conditional menu**
-
-```cshtml
-@if (User.Identity?.IsAuthenticated == true)
-{
-    <div class="flex items-center gap-3">
-        <span class="text-sm text-ink-500 hidden md:inline">@string.Format(S["WelcomeGreeting"].Value, User.Identity!.Name)</span>
-        <a asp-page="/Account/Profile" class="btn-ghost">@S["Profile"]</a>
-        <a asp-page="/Account/MyBookings" class="btn-ghost">@S["MyBookings"]</a>
-        <form method="post" asp-page="/Account/Logout" class="inline">
-            <button type="submit" class="btn-ghost">@S["Logout"]</button>
-        </form>
-    </div>
-}
-else
-{
-    <div class="flex items-center gap-3">
-        <a asp-page="/Account/Login" class="btn-ghost">@S["SignIn"]</a>
-        <a asp-page="/Account/Register" class="btn-brand">@S["Register"]</a>
-    </div>
-}
-```
-
-Note: `User.Identity!.Name` will be the user's email (the Identity setup uses `UserName = email`). For a friendlier display name we'd need to populate a claim with `FullName` at sign-in — out of scope for Phase 1.
-
-- [ ] **Step 3: Run the full Phase 0 + Phase 1 test suite**
-
-```bash
-dotnet test CoreX.UI.Tests/CoreX.UI.Tests.csproj --nologo
-```
-
-Expected: all tests pass (Phase 0's 2 + Phase 1's ~14 so far). Note: `Get_Index_ReturnsOk_AndUkrainianHeadline` still hits the home page anonymously; the layout's else-branch is what renders. The test does NOT assert on auth chrome, so this change is safe.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add CoreX/Pages/Shared/_Layout.cshtml
-git commit -m "Show user menu (Profile, MyBookings, Logout) when authenticated"
-```
-
----
-
-## Task 10 — Role-boundary integration matrix
+## Task 9 — Role-boundary integration matrix
 
 **Files:**
 - Create: `CoreX.UI.Tests/Pages/Account/AuthPolicyMatrixTests.cs`
 
-One xUnit `[Theory]` that drives every (role, page) pair for the Account folder + asserts the right response — 200 OK if allowed, 302 redirect to `/Account/Login` for anonymous, 200 OK for authenticated regardless of role (all Account pages require only `AuthenticatedOnly`).
+(Renumbered: was Task 10 originally; the original Task 9 "Layout user menu" is already folded into the simplification commit.)
 
 - [ ] **Step 1: Create the matrix test**
 
@@ -1628,6 +1156,7 @@ One xUnit `[Theory]` that drives every (role, page) pair for the Account folder 
 ```csharp
 using System.Net;
 using CoreX.UI.Tests.TestSupport;
+using Xunit;
 
 namespace CoreX.UI.Tests.Pages.Account;
 
@@ -1662,13 +1191,6 @@ public class AuthPolicyMatrixTests : IClassFixture<CoreXFactory>
             Assert.StartsWith("/Account/Login", response.Headers.Location?.OriginalString);
     }
 
-    public static IEnumerable<object[]> AuthenticatedPages() =>
-        new[]
-        {
-            new object[] { "/Account/Profile" },
-            new object[] { "/Account/MyBookings" },
-        };
-
     [Theory]
     [InlineData("User")]
     [InlineData("Admin")]
@@ -1694,7 +1216,7 @@ public class AuthPolicyMatrixTests : IClassFixture<CoreXFactory>
 dotnet test CoreX.UI.Tests/CoreX.UI.Tests.csproj --nologo --filter "FullyQualifiedName~AuthPolicyMatrixTests"
 ```
 
-Expected: 5 anonymous cases pass + 3 role cases pass = 8 test runs total.
+Expected: 5 anonymous cases + 3 role cases = 8 test runs, all passing.
 
 - [ ] **Step 3: Commit**
 
@@ -1705,7 +1227,7 @@ git commit -m "Add role-boundary integration matrix for /Account pages"
 
 ---
 
-## Task 11 — End-to-end smoke + final cleanup
+## Task 10 — End-to-end smoke + final cleanup
 
 **Files:**
 - (no new files — manual verification + final commit if drift)
@@ -1716,7 +1238,7 @@ git commit -m "Add role-boundary integration matrix for /Account pages"
 dotnet build CoreX.sln --nologo
 ```
 
-Expected: 0 errors (1 pre-existing CS8618 warning permitted).
+Expected: 0 errors.
 
 - [ ] **Step 2: Run all tests**
 
@@ -1724,7 +1246,7 @@ Expected: 0 errors (1 pre-existing CS8618 warning permitted).
 dotnet test CoreX.sln --nologo --no-build
 ```
 
-Expected: every test passes. Phase 0 (2) + Phase 1 (~22 across Login/Register/Logout/Profile/MyBookings/Matrix) = ~24 tests.
+Expected: Phase 0 (2) + Phase 1 (~20 across Login/Register/Logout/Profile/MyBookings/Matrix) all pass.
 
 - [ ] **Step 3: Smoke-test in browser**
 
@@ -1735,27 +1257,23 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run --project CoreX/CoreX.UI.csproj --
 ```
 
 Walk through:
-1. Open `http://localhost:5050/` — UA hero renders, top-right shows **Увійти / Зареєструватися**.
-2. Click **Зареєструватися** — fill form, submit. Expect redirect to `/`, top-right now shows greeting + **Профіль** + **Мої бронювання** + **Вийти**.
-3. Click **Профіль** — see name + email.
+1. `http://localhost:5050/` — UA hero renders, top-right shows **Увійти / Реєстрація**.
+2. Click **Реєстрація** — fill form, submit. Expect redirect to `/`, top-right now shows **Профіль / Мої бронювання / Вийти**.
+3. Click **Профіль** — see full name + email.
 4. Click **Мої бронювання** — see "Поки що бронювань немає."
-5. Click **Вийти** — back to `/`, top-right shows Sign in / Register again.
-6. Click **Увійти**, enter the same credentials — succeeds, layout reflects authenticated state.
-7. Switch language to **English** — chrome flips to English; navigate `/Account/Login`, confirm form labels are English.
+5. Click **Вийти** — back to `/`, top-right shows Увійти / Реєстрація.
+6. Click **Увійти**, enter the same credentials — succeeds.
+7. Try a wrong password — see "Невірна електронна адреса або пароль." inline.
 
 Stop the app (Ctrl+C).
 
 - [ ] **Step 4: Verify `git status` is clean**
 
-```bash
-git status
-```
-
-Expected: no tracked changes; only the pre-existing untracked files (`.claude/`, `.github/`, `CLAUDE.md`, etc.).
+Expected: no tracked changes; only the pre-existing untracked files.
 
 - [ ] **Step 5: Phase 1 closing commit (only if drift)**
 
-If any files changed during smoke-testing (none expected), commit them. Otherwise this step is a no-op.
+No-op unless smoke-testing touched any tracked file.
 
 ---
 
@@ -1765,9 +1283,8 @@ If any files changed during smoke-testing (none expected), commit them. Otherwis
 - [ ] `dotnet test CoreX.sln` shows all tests passing (Phase 0 + Phase 1).
 - [ ] A new user can register at `/Account/Register` and is auto-logged in.
 - [ ] An existing user can sign in at `/Account/Login`, see Profile + MyBookings, and sign out via the layout button.
-- [ ] Invalid credentials show the localized "Невірна електронна адреса або пароль." (UA) / "Invalid email or password." (EN) message.
-- [ ] Lockout after 5 failed attempts shows the localized "Акаунт тимчасово заблоковано..." message.
+- [ ] Invalid credentials show the UA "Невірна електронна адреса або пароль." message.
+- [ ] Lockout after 5 failed attempts shows "Акаунт тимчасово заблоковано. Спробуйте за 15 хвилин." (existing Identity lockout policy, no Phase 1 wiring needed).
 - [ ] Anonymous access to `/Account/Profile`, `/Account/MyBookings`, `/Account/Logout` redirects to `/Account/Login` with the original URL preserved as `ReturnUrl`.
-- [ ] Language switcher continues to work (Phase 0 behaviour unaffected).
 
-**Next phase:** `Phase 2 — Public discovery` (Home with city picker, `/Clubs`, club detail with HTMX tabs, `/Trainers/{id}`, Discounts, InformationMaterials). Builds the public browsing surface customers see before they ever consider buying.
+**Next phase:** `Phase 2 — Public discovery` (Home with city picker, `/Clubs`, club detail with HTMX tabs, `/Trainers/{id}`, Discounts, InformationMaterials).
