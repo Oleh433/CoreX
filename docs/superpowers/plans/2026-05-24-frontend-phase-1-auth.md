@@ -4,9 +4,9 @@
 
 **Goal:** Ship the user-facing auth flow (Login, Register, Logout) and authenticated Account pages (Profile, MyBookings) on top of the existing Identity cookie setup, with localized validation, a role-boundary integration test matrix, and a layout that shows authenticated state.
 
-**Architecture:** Add four Razor Pages under `CoreX/Pages/Account/` calling `IUserService` directly via DI (no HTTP self-call to the existing `UsersController`). Localize all form labels and validation messages via `IStringLocalizer<SharedResource>` + a new `ValidationMessages` resource type used as `ErrorMessageResourceType` on DataAnnotations input models. Extend the public layout to render a user menu when authenticated. Cover every protected page with a role × HTTP-verb integration test matrix using `WebApplicationFactory<Program>` from Phase 0.
+**Architecture:** Add four Razor Pages under `CoreX/Pages/Account/` calling `IUserService` directly via DI (no HTTP self-call to the existing `UsersController`). Localize all form labels and validation messages via `IStringLocalizer<SharedResource>` — `AddDataAnnotationsLocalization` is configured so that `[Required(ErrorMessage = "Required")]` on input models resolves the key against `SharedResource.{uk,en}.resx`. Extend the public layout to render a user menu when authenticated. Cover every protected page with a role × HTTP-verb integration test matrix using `WebApplicationFactory<Program>` from Phase 0.
 
-**Tech Stack:** ASP.NET Core 8 Razor Pages · Identity cookie auth (existing) · DataAnnotations with localized `ErrorMessageResourceType` · xUnit + `Microsoft.AspNetCore.Mvc.Testing` · EF Core InMemory (test override from Phase 0).
+**Tech Stack:** ASP.NET Core 8 Razor Pages · Identity cookie auth (existing) · `AddDataAnnotationsLocalization` against `SharedResource` · xUnit + `Microsoft.AspNetCore.Mvc.Testing` · EF Core InMemory (test override from Phase 0).
 
 **Spec reference:** `docs/superpowers/specs/2026-05-20-frontend-design.md` — Phase 1 in §11, auth specifics in §5, validation pattern in §9, testing strategy in §10.
 
@@ -32,7 +32,7 @@
 | `UserManager<ApplicationUser>` | DI | Used by pages to look up the current user. |
 | `IBookingService.GetByUserIdAsync(Guid)` | `CoreX.Application/ServiceInterfaces/IBookingService.cs` | Returns `List<BookingResponseDto>` (empty if none). DTO has IDs only — no club/subscription names. |
 | `IClubService.GetByIdAsync(Guid)`, `ISubscriptionService.GetByIdAsync(Guid)` | services | Used by MyBookings to resolve club + subscription names. |
-| Razor Pages auth conventions | `CoreX/Program.cs:85-95` | `AuthorizeFolder("/Account", "AuthenticatedOnly")`, `AllowAnonymousToPage("/Account/Login")`, `AllowAnonymousToPage("/Account/Register")`. Already in place from Phase 0. **No `Program.cs` changes in Phase 1.** |
+| Razor Pages auth conventions | `CoreX/Program.cs:85-95` | `AuthorizeFolder("/Account", "AuthenticatedOnly")`, `AllowAnonymousToPage("/Account/Login")`, `AllowAnonymousToPage("/Account/Register")`. Already in place from Phase 0. **The Phase 1 prerequisite commit `a1dd016` chains `.AddDataAnnotationsLocalization(o => o.DataAnnotationLocalizerProvider = (_, factory) => factory.Create(typeof(SharedResource)))` after `.AddViewLocalization()`.** |
 
 ## File map
 
@@ -40,9 +40,6 @@
 
 | File | Responsibility |
 |---|---|
-| `CoreX/Resources/ValidationMessages.cs` | Marker class for `ErrorMessageResourceType`. |
-| `CoreX/Resources/ValidationMessages.uk.resx` | Localized DataAnnotations messages — UA. |
-| `CoreX/Resources/ValidationMessages.en.resx` | Localized DataAnnotations messages — EN. |
 | `CoreX/Pages/Account/Models/LoginInput.cs` | Razor Pages input model for `/Account/Login`. |
 | `CoreX/Pages/Account/Models/RegisterInput.cs` | Razor Pages input model for `/Account/Register`. |
 | `CoreX/Pages/Account/Login.cshtml` | Login page markup. |
@@ -143,103 +140,33 @@ git commit -m "Drop TrainingPlan nav link (out of frontend scope)"
 
 ---
 
-## Task 2 — Localized validation messages and shared auth chrome keys
+## Task 2 — Shared auth chrome keys + localized validation strategy (already implemented)
 
-**Files:**
-- Create: `CoreX/Resources/ValidationMessages.cs`
-- Create: `CoreX/Resources/ValidationMessages.uk.resx`
-- Create: `CoreX/Resources/ValidationMessages.en.resx`
-- Modify: `CoreX/Resources/SharedResource.uk.resx`
-- Modify: `CoreX/Resources/SharedResource.en.resx`
+**Already landed in commits `764f761` + `a1dd016`.** Captured here so the rest of the plan reads end-to-end.
 
-DataAnnotations on `LoginInput` / `RegisterInput` reference `ErrorMessageResourceType = typeof(ValidationMessages)` + `ErrorMessageResourceName = "..."` so the same attribute renders UA or EN per the current culture. The marker class is just a strongly-typed handle — Razor doesn't import it; only the DataAnnotations runtime does.
+The original plan stored validation messages in a separate `ValidationMessages` resource type with the marker-class pattern. That pattern requires generated static properties on the marker (the `PublicResXFileCodeGenerator` workflow); the empty marker we created throws at first DataAnnotation use. The fix-forward switched to ASP.NET Core 8's idiomatic pattern:
 
-- [ ] **Step 1: Create the marker class**
+1. **Validation message keys live in `SharedResource.{uk,en}.resx`** alongside the chrome keys, in one resource type. The 6 validation keys (`Required`, `EmailInvalid`, `PasswordTooShort`, `FullNameLength`, `PasswordsDoNotMatch`, `TermsRequired`) were merged in. The 9 auth-chrome keys (`Logout`, `Profile`, `MyBookings`, `WelcomeGreeting`, `OrSeparator`, `GenericError`, `LockoutError`, `InvalidCredentials`, `EmailAlreadyTaken`) were appended.
 
-`CoreX/Resources/ValidationMessages.cs`:
+2. **`CoreX/Program.cs` chains `.AddDataAnnotationsLocalization`** onto `AddRazorPages().AddViewLocalization()`:
 
-```csharp
-namespace CoreX.Resources;
+   ```csharp
+   .AddDataAnnotationsLocalization(o =>
+       o.DataAnnotationLocalizerProvider = (_, factory) =>
+           factory.Create(typeof(CoreX.Resources.SharedResource)));
+   ```
 
-// Marker for DataAnnotations ErrorMessageResourceType. The resx files
-// alongside this class supply the localized strings.
-public sealed class ValidationMessages
-{
-}
-```
+   With this in place, `[Required(ErrorMessage = "Required")]` on an input model resolves `"Required"` against `SharedResource.{uk,en}.resx` per current culture.
 
-- [ ] **Step 2: Create `CoreX/Resources/ValidationMessages.uk.resx`**
+3. **No `ValidationMessages.cs` or `ValidationMessages.{uk,en}.resx`.** Tasks 4 / 5 below use `ErrorMessage = "<key>"` directly — not `ErrorMessageResourceType` / `ErrorMessageResourceName`.
 
-Use the same `xml:space="preserve"` resx schema as Phase 0. Keys + UA values:
-
-| Name | Value |
-|---|---|
-| `Required` | `Це поле обов'язкове.` |
-| `EmailInvalid` | `Введіть коректну електронну адресу.` |
-| `PasswordTooShort` | `Пароль має містити щонайменше 8 символів.` |
-| `FullNameLength` | `Ім'я має містити від 3 до 100 символів.` |
-| `PasswordsDoNotMatch` | `Паролі не співпадають.` |
-| `TermsRequired` | `Потрібно прийняти умови використання.` |
-
-- [ ] **Step 3: Create `CoreX/Resources/ValidationMessages.en.resx`**
-
-Same keys, English values:
-
-| Name | Value |
-|---|---|
-| `Required` | `This field is required.` |
-| `EmailInvalid` | `Please enter a valid email address.` |
-| `PasswordTooShort` | `Password must be at least 8 characters long.` |
-| `FullNameLength` | `Name must be between 3 and 100 characters.` |
-| `PasswordsDoNotMatch` | `Passwords do not match.` |
-| `TermsRequired` | `You must accept the terms of use.` |
-
-- [ ] **Step 4: Extend `SharedResource.uk.resx`**
-
-Add the following `<data>` entries (preserve existing ones):
-
-| Name | Value |
-|---|---|
-| `Logout` | `Вийти` |
-| `Profile` | `Профіль` |
-| `MyBookings` | `Мої бронювання` |
-| `WelcomeGreeting` | `Привіт, {0}` |
-| `OrSeparator` | `або` |
-| `GenericError` | `Щось пішло не так. Спробуйте ще раз.` |
-| `LockoutError` | `Акаунт тимчасово заблоковано. Спробуйте за 15 хвилин.` |
-| `InvalidCredentials` | `Невірна електронна адреса або пароль.` |
-| `EmailAlreadyTaken` | `Користувач з такою електронною адресою вже існує.` |
-
-- [ ] **Step 5: Extend `SharedResource.en.resx`**
-
-Mirror with English values:
-
-| Name | Value |
-|---|---|
-| `Logout` | `Sign out` |
-| `Profile` | `Profile` |
-| `MyBookings` | `My bookings` |
-| `WelcomeGreeting` | `Hi, {0}` |
-| `OrSeparator` | `or` |
-| `GenericError` | `Something went wrong. Please try again.` |
-| `LockoutError` | `Account is temporarily locked. Try again in 15 minutes.` |
-| `InvalidCredentials` | `Invalid email or password.` |
-| `EmailAlreadyTaken` | `A user with this email already exists.` |
-
-- [ ] **Step 6: Build to confirm resx integrity**
+If you arrive at this task during a fresh plan replay, the merged set of `SharedResource` keys (15 entries) is on the branch already; nothing to add. Verify with:
 
 ```bash
-dotnet build CoreX.sln --nologo
+grep -c "<data name=" CoreX/Resources/SharedResource.uk.resx
 ```
 
-Expected: 0 errors.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add CoreX/Resources/ValidationMessages.cs CoreX/Resources/ValidationMessages.uk.resx CoreX/Resources/ValidationMessages.en.resx CoreX/Resources/SharedResource.uk.resx CoreX/Resources/SharedResource.en.resx
-git commit -m "Add ValidationMessages resources and auth chrome keys"
-```
+Expected: 26 (the 11 original Phase 0 keys + the 15 added across this revision and the earlier shared additions).
 
 ---
 
@@ -562,24 +489,22 @@ Expected: all 5 fail (Login page doesn't exist; GETs return 404; antiforgery scr
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
-using CoreX.Resources;
 
 namespace CoreX.Pages.Account.Models;
 
 public class LoginInput
 {
-    [Required(ErrorMessageResourceType = typeof(ValidationMessages),
-              ErrorMessageResourceName = "Required")]
-    [EmailAddress(ErrorMessageResourceType = typeof(ValidationMessages),
-                  ErrorMessageResourceName = "EmailInvalid")]
+    [Required(ErrorMessage = "Required")]
+    [EmailAddress(ErrorMessage = "EmailInvalid")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessageResourceType = typeof(ValidationMessages),
-              ErrorMessageResourceName = "Required")]
+    [Required(ErrorMessage = "Required")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 }
 ```
+
+The `ErrorMessage` strings are keys looked up against `SharedResource.{uk,en}.resx` via the `AddDataAnnotationsLocalization` wiring from the prerequisite commit.
 
 - [ ] **Step 4: Create the PageModel**
 
@@ -656,14 +581,13 @@ public class LoginModel : PageModel
 ```cshtml
 @page
 @model CoreX.Pages.Account.LoginModel
-@inject IViewLocalizer Page
 @{
-    ViewData["Title"] = Page["Title"].Value;
+    ViewData["Title"] = L["Title"].Value;
 }
 
 <section class="max-w-md mx-auto px-4 py-12 md:py-16">
-    <h1 class="text-3xl font-black uppercase tracking-tight">@Page["Title"]</h1>
-    <p class="mt-3 text-ink-500">@Page["Subtitle"]</p>
+    <h1 class="text-3xl font-black uppercase tracking-tight">@L["Title"]</h1>
+    <p class="mt-3 text-ink-500">@L["Subtitle"]</p>
 
     <form method="post" class="mt-8 space-y-5"
           asp-route-returnUrl="@Model.ReturnUrl"
@@ -672,7 +596,7 @@ public class LoginModel : PageModel
 
         <div>
             <label asp-for="Input.Email" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @Page["EmailLabel"]
+                @L["EmailLabel"]
             </label>
             <input asp-for="Input.Email" autocomplete="email" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -681,19 +605,19 @@ public class LoginModel : PageModel
 
         <div>
             <label asp-for="Input.Password" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @Page["PasswordLabel"]
+                @L["PasswordLabel"]
             </label>
             <input asp-for="Input.Password" type="password" autocomplete="current-password" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
             <span asp-validation-for="Input.Password" class="mt-1 block text-sm text-danger"></span>
         </div>
 
-        <button type="submit" class="btn-brand w-full">@Page["Submit"]</button>
+        <button type="submit" class="btn-brand w-full">@L["Submit"]</button>
     </form>
 
     <p class="mt-6 text-sm text-ink-500 text-center">
-        @Page["NoAccountPrompt"]
-        <a asp-page="/Account/Register" class="font-semibold text-brand-500 hover:underline">@Page["RegisterCta"]</a>
+        @L["NoAccountPrompt"]
+        <a asp-page="/Account/Register" class="font-semibold text-brand-500 hover:underline">@L["RegisterCta"]</a>
     </p>
 </section>
 ```
@@ -913,47 +837,35 @@ Expected: 5 failing (page doesn't exist).
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
-using CoreX.Resources;
 
 namespace CoreX.Pages.Account.Models;
 
 public class RegisterInput
 {
-    [Required(ErrorMessageResourceType = typeof(ValidationMessages),
-              ErrorMessageResourceName = "Required")]
-    [StringLength(100, MinimumLength = 3,
-        ErrorMessageResourceType = typeof(ValidationMessages),
-        ErrorMessageResourceName = "FullNameLength")]
+    [Required(ErrorMessage = "Required")]
+    [StringLength(100, MinimumLength = 3, ErrorMessage = "FullNameLength")]
     public string FullName { get; set; } = string.Empty;
 
-    [Required(ErrorMessageResourceType = typeof(ValidationMessages),
-              ErrorMessageResourceName = "Required")]
-    [EmailAddress(ErrorMessageResourceType = typeof(ValidationMessages),
-                  ErrorMessageResourceName = "EmailInvalid")]
+    [Required(ErrorMessage = "Required")]
+    [EmailAddress(ErrorMessage = "EmailInvalid")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessageResourceType = typeof(ValidationMessages),
-              ErrorMessageResourceName = "Required")]
-    [StringLength(100, MinimumLength = 8,
-        ErrorMessageResourceType = typeof(ValidationMessages),
-        ErrorMessageResourceName = "PasswordTooShort")]
+    [Required(ErrorMessage = "Required")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "PasswordTooShort")]
     [DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 
-    [Required(ErrorMessageResourceType = typeof(ValidationMessages),
-              ErrorMessageResourceName = "Required")]
+    [Required(ErrorMessage = "Required")]
     [DataType(DataType.Password)]
-    [Compare(nameof(Password),
-        ErrorMessageResourceType = typeof(ValidationMessages),
-        ErrorMessageResourceName = "PasswordsDoNotMatch")]
+    [Compare(nameof(Password), ErrorMessage = "PasswordsDoNotMatch")]
     public string ConfirmPassword { get; set; } = string.Empty;
 
-    [Range(typeof(bool), "true", "true",
-        ErrorMessageResourceType = typeof(ValidationMessages),
-        ErrorMessageResourceName = "TermsRequired")]
+    [Range(typeof(bool), "true", "true", ErrorMessage = "TermsRequired")]
     public bool TermsAccepted { get; set; }
 }
 ```
+
+`ErrorMessage` strings are keys resolved against `SharedResource.{uk,en}.resx`.
 
 - [ ] **Step 4: Create the PageModel**
 
@@ -1045,21 +957,20 @@ public class RegisterModel : PageModel
 ```cshtml
 @page
 @model CoreX.Pages.Account.RegisterModel
-@inject IViewLocalizer Page
 @{
-    ViewData["Title"] = Page["Title"].Value;
+    ViewData["Title"] = L["Title"].Value;
 }
 
 <section class="max-w-md mx-auto px-4 py-12 md:py-16">
-    <h1 class="text-3xl font-black uppercase tracking-tight">@Page["Title"]</h1>
-    <p class="mt-3 text-ink-500">@Page["Subtitle"]</p>
+    <h1 class="text-3xl font-black uppercase tracking-tight">@L["Title"]</h1>
+    <p class="mt-3 text-ink-500">@L["Subtitle"]</p>
 
     <form method="post" class="mt-8 space-y-5" novalidate>
         <div asp-validation-summary="ModelOnly" class="rounded-card border border-danger bg-danger/5 text-danger px-4 py-3 text-sm"></div>
 
         <div>
             <label asp-for="Input.FullName" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @Page["FullNameLabel"]
+                @L["FullNameLabel"]
             </label>
             <input asp-for="Input.FullName" autocomplete="name" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -1068,7 +979,7 @@ public class RegisterModel : PageModel
 
         <div>
             <label asp-for="Input.Email" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @Page["EmailLabel"]
+                @L["EmailLabel"]
             </label>
             <input asp-for="Input.Email" autocomplete="email" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -1077,7 +988,7 @@ public class RegisterModel : PageModel
 
         <div>
             <label asp-for="Input.Password" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @Page["PasswordLabel"]
+                @L["PasswordLabel"]
             </label>
             <input asp-for="Input.Password" type="password" autocomplete="new-password" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -1086,7 +997,7 @@ public class RegisterModel : PageModel
 
         <div>
             <label asp-for="Input.ConfirmPassword" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
-                @Page["ConfirmPasswordLabel"]
+                @L["ConfirmPasswordLabel"]
             </label>
             <input asp-for="Input.ConfirmPassword" type="password" autocomplete="new-password" required
                    class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
@@ -1095,16 +1006,16 @@ public class RegisterModel : PageModel
 
         <label class="flex items-start gap-3 text-sm text-ink-800">
             <input asp-for="Input.TermsAccepted" type="checkbox" class="mt-1 rounded border-ink-200 text-brand-500 focus:ring-brand-500" />
-            <span>@Page["TermsLabel"]</span>
+            <span>@L["TermsLabel"]</span>
         </label>
         <span asp-validation-for="Input.TermsAccepted" class="block text-sm text-danger"></span>
 
-        <button type="submit" class="btn-brand w-full">@Page["Submit"]</button>
+        <button type="submit" class="btn-brand w-full">@L["Submit"]</button>
     </form>
 
     <p class="mt-6 text-sm text-ink-500 text-center">
-        @Page["HaveAccountPrompt"]
-        <a asp-page="/Account/Login" class="font-semibold text-brand-500 hover:underline">@Page["LoginCta"]</a>
+        @L["HaveAccountPrompt"]
+        <a asp-page="/Account/Login" class="font-semibold text-brand-500 hover:underline">@L["LoginCta"]</a>
     </p>
 </section>
 ```
@@ -1379,18 +1290,17 @@ public class ProfileModel : PageModel
 ```cshtml
 @page
 @model CoreX.Pages.Account.ProfileModel
-@inject IViewLocalizer Page
 @{
-    ViewData["Title"] = Page["Title"].Value;
+    ViewData["Title"] = L["Title"].Value;
 }
 
 <section class="max-w-2xl mx-auto px-4 py-12 md:py-16">
-    <p class="text-xs font-semibold tracking-[0.2em] uppercase text-brand-500">@Page["Eyebrow"]</p>
+    <p class="text-xs font-semibold tracking-[0.2em] uppercase text-brand-500">@L["Eyebrow"]</p>
     <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-tight">@Model.FullName</h1>
 
     <dl class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
         <div>
-            <dt class="text-ink-500 uppercase tracking-wide text-xs font-semibold">@Page["EmailLabel"]</dt>
+            <dt class="text-ink-500 uppercase tracking-wide text-xs font-semibold">@L["EmailLabel"]</dt>
             <dd class="mt-1 text-ink-900 break-all">@Model.Email</dd>
         </div>
     </dl>
@@ -1582,17 +1492,16 @@ Verified at master HEAD:
 ```cshtml
 @page
 @model CoreX.Pages.Account.MyBookingsModel
-@inject IViewLocalizer Page
 @{
-    ViewData["Title"] = Page["Title"].Value;
+    ViewData["Title"] = L["Title"].Value;
 }
 
 <section class="max-w-4xl mx-auto px-4 py-12 md:py-16">
-    <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tight">@Page["Title"]</h1>
+    <h1 class="text-3xl md:text-4xl font-black uppercase tracking-tight">@L["Title"]</h1>
 
     @if (Model.Rows.Count == 0)
     {
-        <p class="mt-8 text-ink-500">@Page["EmptyState"]</p>
+        <p class="mt-8 text-ink-500">@L["EmptyState"]</p>
     }
     else
     {
