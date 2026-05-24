@@ -1,0 +1,36 @@
+@page
+@model CoreX.Pages.Admin.Subscriptions.IndexModel
+@{
+    ViewData["Title"] = "Абонементи";
+}
+
+<div class="flex items-center justify-between">
+    <h1 class="text-2xl font-black uppercase tracking-tight">Абонементи</h1>
+    <a asp-page="Create" class="btn-brand">+ Новий абонемент</a>
+</div>
+
+@if (Model.Rows.Count == 0)
+{
+    <p class="mt-6 text-ink-500">Поки немає абонементів.</p>
+}
+else
+{
+    <table class="mt-6 w-full bg-white rounded-card border border-ink-200 text-sm">
+        <thead class="bg-ink-50 text-left text-xs uppercase tracking-wider text-ink-500">
+            <tr>
+                <th class="px-4 py-2">Назва</th>
+                <th class="px-4 py-2">Клуб</th>
+                <th class="px-4 py-2">Ціна</th>
+                <th class="px-4 py-2">Тривалість (дн.)</th>
+                <th class="px-4 py-2">Статус</th>
+                <th class="px-4 py-2 text-right">Дії</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-200">
+        @foreach (var row in Model.Rows)
+        {
+            @await Html.PartialAsync("_SubscriptionRow", row)
+        }
+        </tbody>
+    </table>
+}

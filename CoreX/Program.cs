@@ -91,6 +91,8 @@ namespace CoreX
                 options.Conventions.AllowAnonymousToPage("/Account/Login");
                 options.Conventions.AllowAnonymousToPage("/Account/Register");
                 options.Conventions.AuthorizePage("/Admin/Subscriptions/Index", "OwnerOnly");
+                options.Conventions.AuthorizePage("/Admin/Subscriptions/Create", "OwnerOnly");
+                options.Conventions.AuthorizePage("/Admin/Subscriptions/Edit", "OwnerOnly");
                 options.Conventions.AuthorizePage("/Admin/Discounts/Index", "OwnerOnly");
                 options.Conventions.AuthorizePage("/Admin/Users/RegisterAdmin", "OwnerOnly");
             })
