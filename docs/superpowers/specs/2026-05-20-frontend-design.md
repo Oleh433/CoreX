@@ -49,7 +49,6 @@ CoreX/                              (existing Web project)
 │   ├── Vacancies/
 │   ├── Discounts/                  "Promotions" public page
 │   ├── InformationMaterials/
-│   ├── TrainingPlan/               generator form + results
 │   ├── Account/                    Login, Register, Profile, MyBookings
 │   ├── Admin/                      role-protected
 │   └── Error.cshtml + Error/{code}.cshtml
@@ -128,7 +127,6 @@ app.MapRazorPages();   // alongside existing app.MapControllers();
 | `/Vacancies/{id}/Apply` | anon | `IVacancyApplicationService.Create` |
 | `/Discounts` | anon | `IDiscountService.GetActive` |
 | `/InformationMaterials` | anon | `IInformationMaterialService` |
-| `/TrainingPlan` | anon | `ITrainingPlanService.Generate` |
 | `/Account/Login` | anon | `IUserService.SignIn` |
 | `/Account/Register` | anon | `IUserService.UserRegister` |
 | `/Account/Logout` | user | `IUserService.SignOut` |
@@ -189,7 +187,7 @@ The backlog allows **anonymous** membership booking. Current `IBookingService.Cr
 
 ### Where HTMX is used vs not
 
-- **Used:** club detail tabs, training-plan generator, admin row actions (Confirm/Cancel/Accept/Reject), city filter dropdown on `/Clubs`, "Load more" pagination.
+- **Used:** club detail tabs, admin row actions (Confirm/Cancel/Accept/Reject), city filter dropdown on `/Clubs`, "Load more" pagination.
 - **Not used:** Login/Register (plain form POST), CRUD Create/Edit pages (full page reload), top-level navigation.
 
 ### Error handling
@@ -354,7 +352,7 @@ Built-in `ILogger<T>` everywhere; default console logger for v1. One log line pe
 | Layer | Test? | Rationale |
 |---|---|---|
 | Razor markup | No | Razor compiler type-checks at build. Manual review + e2e covers behaviour. |
-| PageModel handlers | Selectively | Cover non-trivial logic (training-plan input, anonymous booking, tab-handler pages). Skip pure pass-throughs. |
+| PageModel handlers | Selectively | Cover non-trivial logic (anonymous booking, tab-handler pages). Skip pure pass-throughs. |
 | Service / domain | Already covered | Out of frontend scope. |
 | Auth policies | Yes, one per role boundary | `WebApplicationFactory` integration test per protected endpoint × role matrix. |
 | HTMX swap shape | Yes, one per endpoint | Integration test confirming an `HX-Request: true` request returns a partial (no `<html>`/`<body>`). |
@@ -374,9 +372,8 @@ Each phase ships as its own PR.
 | 2 | Public discovery | Home, `/Clubs`, club detail (tabbed via HTMX), `/Trainers/{id}`, Discounts, InformationMaterials, city filter | A visitor can browse clubs end to end |
 | 3 | Memberships + booking | Subscriptions catalog, booking form (anonymous-friendly), `IBookingService.CreateAsync(Guid?, …)` change | Anyone can book a subscription; logged-in users see it on `/Account/MyBookings` |
 | 4 | Vacancies + applications | `/Vacancies/{id}`, `/Vacancies/{id}/Apply`, email hook via existing `IEmailSender` | Anyone can apply to a vacancy; admin sees the queue |
-| 5 | TrainingPlan generator | `/TrainingPlan` form with HTMX result swap | Form submission renders a plan inline |
-| 6 | Admin panel | Admin layout + dashboard + CRUD pages + booking/application review (htmx) + Owner-only Subscriptions/Discounts/RegisterAdmin | An Owner can run the whole business through the panel |
-| 7 | Polish | 404/500/403 pages, empty states, loading indicators, toasts, a11y / Lighthouse pass | All error routes (404, 403, 500) render with localized messages; manual keyboard navigation works on HTMX tabs and admin row actions; Lighthouse score ≥ 90 on the home page (Performance, A11y, Best Practices, SEO) |
+| 5 | Admin panel | Admin layout + dashboard + CRUD pages + booking/application review (htmx) + Owner-only Subscriptions/Discounts/RegisterAdmin | An Owner can run the whole business through the panel |
+| 6 | Polish | 404/500/403 pages, empty states, loading indicators, toasts, a11y / Lighthouse pass | All error routes (404, 403, 500) render with localized messages; manual keyboard navigation works on HTMX tabs and admin row actions; Lighthouse score ≥ 90 on the home page (Performance, A11y, Best Practices, SEO) |
 
 Phases 0–3 are the critical path to a demo-able public site.
 
