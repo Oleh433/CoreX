@@ -13,7 +13,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.WebEncoders;
 using System.Globalization;
+using System.Text.Unicode;
 
 namespace CoreX
 {
@@ -99,6 +101,17 @@ namespace CoreX
                 o.AddPolicy("AdminOrOwner",      p => p.RequireRole("Admin", "Owner"));
                 o.AddPolicy("OwnerOnly",         p => p.RequireRole("Owner"));
                 o.AddPolicy("AuthenticatedOnly", p => p.RequireAuthenticatedUser());
+            });
+
+            // Allow Cyrillic + Basic Latin to render unescaped in HTML output (validation
+            // errors, tag-helper-emitted content). Without this, HtmlEncoder.Default
+            // escapes UA letters as numeric entities (&#x41D; etc.), which breaks both
+            // visual output and substring assertions in tests.
+            builder.Services.Configure<WebEncoderOptions>(o =>
+            {
+                o.TextEncoderSettings = new System.Text.Encodings.Web.TextEncoderSettings(
+                    UnicodeRanges.BasicLatin,
+                    UnicodeRanges.Cyrillic);
             });
 
             builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
