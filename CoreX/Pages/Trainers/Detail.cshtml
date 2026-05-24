@@ -1,0 +1,30 @@
+@page "/Trainers/{id:guid}"
+@model CoreX.Pages.Trainers.DetailModel
+@{
+    ViewData["Title"] = Model.Trainer.FullName;
+}
+
+<section class="max-w-3xl mx-auto px-4 py-12 md:py-16">
+    <p class="text-xs font-semibold tracking-[0.2em] uppercase text-brand-500">@Model.Trainer.Specialization</p>
+    <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-tight">@Model.Trainer.FullName</h1>
+    <p class="mt-2 text-ink-500">@Model.Trainer.ExperienceYears років досвіду @if (Model.Trainer.ClubName is not null) { <text> · @Model.Trainer.ClubName</text> }</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Trainer.Bio))
+    {
+        <p class="mt-6 text-ink-800 leading-relaxed">@Model.Trainer.Bio</p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.Trainer.Email) || !string.IsNullOrWhiteSpace(Model.Trainer.Phone))
+    {
+        <dl class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+            @if (!string.IsNullOrWhiteSpace(Model.Trainer.Email))
+            {
+                <div><dt class="text-xs uppercase tracking-wide text-ink-500 font-semibold">Email</dt><dd class="mt-1 break-all">@Model.Trainer.Email</dd></div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Trainer.Phone))
+            {
+                <div><dt class="text-xs uppercase tracking-wide text-ink-500 font-semibold">Телефон</dt><dd class="mt-1">@Model.Trainer.Phone</dd></div>
+            }
+        </dl>
+    }
+</section>
