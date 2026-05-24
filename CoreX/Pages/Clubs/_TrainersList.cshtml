@@ -1,0 +1,18 @@
+@model CoreX.Pages.Clubs.DetailModel
+
+@if (Model.Trainers.Count == 0)
+{
+    <p class="text-ink-500">Тренерів поки немає.</p>
+}
+else
+{
+    <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    @foreach (var t in Model.Trainers)
+    {
+        <li class="rounded-card border border-ink-200 p-4">
+            <p class="font-bold text-ink-900">@t.FullName</p>
+            <p class="text-sm text-ink-500">@t.Specialization · @t.ExperienceYears р. досвіду</p>
+        </li>
+    }
+    </ul>
+}

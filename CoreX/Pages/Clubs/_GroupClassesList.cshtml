@@ -1,0 +1,21 @@
+@model CoreX.Pages.Clubs.DetailModel
+
+@if (Model.GroupClasses.Count == 0)
+{
+    <p class="text-ink-500">Групових занять поки немає.</p>
+}
+else
+{
+    <ul class="divide-y divide-ink-200">
+    @foreach (var g in Model.GroupClasses)
+    {
+        <li class="py-4 flex justify-between gap-4">
+            <div>
+                <p class="font-bold">@g.Type</p>
+                <p class="text-sm text-ink-500">@g.StartTime.ToString("d MMMM, HH:mm") · @g.DurationMinutes хв · @g.Audience</p>
+            </div>
+            <span class="text-xs text-ink-500">@g.TrainerFullName</span>
+        </li>
+    }
+    </ul>
+}
