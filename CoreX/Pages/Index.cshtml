@@ -21,3 +21,24 @@
         </a>
     </div>
 </section>
+
+@if (Model.Featured.Count > 0)
+{
+    <section class="max-w-6xl mx-auto px-4 py-12 md:py-16">
+        <div class="flex items-baseline justify-between gap-4">
+            <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight">Наші клуби</h2>
+            <a href="/Clubs" class="text-sm font-semibold text-brand-500 hover:underline">Усі клуби →</a>
+        </div>
+        <ul class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var c in Model.Featured)
+        {
+            <li class="rounded-card border border-ink-200 bg-white p-5">
+                <p class="text-xs font-semibold tracking-[0.2em] uppercase text-brand-500">@c.City</p>
+                <h3 class="mt-2 text-lg font-bold text-ink-900">@c.Name</h3>
+                <p class="mt-1 text-sm text-ink-500">@c.Address</p>
+                <a asp-page="/Clubs/Detail" asp-route-id="@c.Id" class="btn-ghost mt-4 inline-flex">Деталі →</a>
+            </li>
+        }
+        </ul>
+    </section>
+}

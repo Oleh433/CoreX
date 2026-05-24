@@ -52,4 +52,17 @@ public class IndexTests : IClassFixture<CoreXFactory>
         Assert.Contains("Find a club", body);
         Assert.DoesNotContain("Перетни свою межу.", body);
     }
+
+    [Fact]
+    public async Task Get_Index_ShowsFeaturedClubsSection()
+    {
+        await CoreX.UI.Tests.TestSupport.SeedData.SeedDiscoveryFixtureAsync(_factory);
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/");
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Energy Kyiv", body);
+        Assert.Contains("Forge Lviv", body);
+    }
 }
