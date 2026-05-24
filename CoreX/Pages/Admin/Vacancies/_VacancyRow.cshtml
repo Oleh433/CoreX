@@ -1,0 +1,41 @@
+@model CoreX.Application.DTO.VacancyResponseDto
+
+<tr id="row-@Model.Id">
+    <td class="px-4 py-3 font-semibold">@Model.Title</td>
+    <td class="px-4 py-3">@Model.ClubName</td>
+    <td class="px-4 py-3">
+        @if (Model.IsActive)
+        {
+            <span class="text-xs font-semibold uppercase rounded-pill px-3 py-1 bg-success/10 text-success">Активна</span>
+        }
+        else
+        {
+            <span class="text-xs font-semibold uppercase rounded-pill px-3 py-1 bg-ink-200 text-ink-500">Неактивна</span>
+        }
+    </td>
+    <td class="px-4 py-3 text-right space-x-2">
+        <a asp-page="Edit" asp-route-id="@Model.Id" class="text-brand-500 hover:underline">Редагувати</a>
+        @if (Model.IsActive)
+        {
+            <button type="button"
+                    hx-post="/Admin/Vacancies?handler=Deactivate&id=@Model.Id"
+                    hx-target="#row-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="text-warning hover:underline">Деактивувати</button>
+        }
+        else
+        {
+            <button type="button"
+                    hx-post="/Admin/Vacancies?handler=Activate&id=@Model.Id"
+                    hx-target="#row-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="text-success hover:underline">Активувати</button>
+        }
+        <button type="button"
+                hx-post="/Admin/Vacancies?handler=Delete&id=@Model.Id"
+                hx-confirm="Видалити вакансію?"
+                hx-target="#row-@Model.Id"
+                hx-swap="outerHTML swap:0.3s"
+                class="text-danger hover:underline">Видалити</button>
+    </td>
+</tr>
