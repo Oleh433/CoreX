@@ -1,0 +1,46 @@
+@page
+@model CoreX.Pages.Admin.InformationMaterials.IndexModel
+@{
+    ViewData["Title"] = "Інформація";
+}
+
+<div class="flex items-center justify-between">
+    <h1 class="text-2xl font-black uppercase tracking-tight">Інформаційні матеріали</h1>
+    <a asp-page="Create" class="btn-brand">+ Новий матеріал</a>
+</div>
+
+@if (Model.Materials.Count == 0)
+{
+    <p class="mt-6 text-ink-500">Поки немає матеріалів.</p>
+}
+else
+{
+    <table class="mt-6 w-full bg-white rounded-card border border-ink-200 text-sm">
+        <thead class="bg-ink-50 text-left text-xs uppercase tracking-wider text-ink-500">
+            <tr>
+                <th class="px-4 py-2">Заголовок</th>
+                <th class="px-4 py-2">Категорія</th>
+                <th class="px-4 py-2">Створено</th>
+                <th class="px-4 py-2 text-right">Дії</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-200">
+        @foreach (var m in Model.Materials)
+        {
+            <tr id="row-@m.Id">
+                <td class="px-4 py-3 font-semibold">@m.Title</td>
+                <td class="px-4 py-3 text-ink-500">@(m.Category ?? "—")</td>
+                <td class="px-4 py-3 text-ink-500">@m.CreatedAt.ToString("yyyy-MM-dd")</td>
+                <td class="px-4 py-3 text-right">
+                    <button type="button"
+                            hx-post="/Admin/InformationMaterials?handler=Delete&id=@m.Id"
+                            hx-confirm="Видалити матеріал @m.Title?"
+                            hx-target="#row-@m.Id"
+                            hx-swap="outerHTML swap:0.3s"
+                            class="text-danger hover:underline">Видалити</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
