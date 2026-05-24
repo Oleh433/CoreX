@@ -24,7 +24,31 @@
                 <h2 class="mt-2 text-lg font-bold text-ink-900">@d.Title</h2>
                 @if (!string.IsNullOrWhiteSpace(d.Description))
                 {
-                    <p class="mt-2 text-sm text-ink-500">@d.Description</p>
+                    <p class="mt-2 text-sm text-ink-500 whitespace-pre-line">@d.Description</p>
+                }
+                @if (d.StartDate is not null || d.EndDate is not null)
+                {
+                    <p class="mt-3 text-xs uppercase tracking-wider text-ink-500">
+                        @if (d.StartDate is not null && d.EndDate is not null)
+                        {
+                            <text>З @d.StartDate.Value.ToString("d MMMM yyyy") до @d.EndDate.Value.ToString("d MMMM yyyy")</text>
+                        }
+                        else if (d.EndDate is not null)
+                        {
+                            <text>До @d.EndDate.Value.ToString("d MMMM yyyy")</text>
+                        }
+                        else if (d.StartDate is not null)
+                        {
+                            <text>З @d.StartDate.Value.ToString("d MMMM yyyy")</text>
+                        }
+                    </p>
+                }
+                @if (!string.IsNullOrWhiteSpace(d.Conditions))
+                {
+                    <details class="mt-3 text-sm text-ink-800">
+                        <summary class="cursor-pointer font-semibold text-brand-500 hover:underline">Умови</summary>
+                        <p class="mt-2 whitespace-pre-line">@d.Conditions</p>
+                    </details>
                 }
                 @if (!string.IsNullOrWhiteSpace(d.PromoCode))
                 {
