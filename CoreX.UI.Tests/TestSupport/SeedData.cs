@@ -113,6 +113,23 @@ public static class SeedData
 
         db.Discounts.AddRange(discountA, discountB);
 
+        // Subscriptions — one active per club. Ctor: (title, clubId, price, durationDays, visitsLimit?, description?).
+        var subA = new Subscription(
+            title: "Місячний",
+            clubId: clubA.Id,
+            price: 800m,
+            durationDays: 30,
+            description: "Безліміт у клубі Energy Kyiv");
+
+        var subB = new Subscription(
+            title: "Квартальний",
+            clubId: clubB.Id,
+            price: 2100m,
+            durationDays: 90,
+            description: "Безліміт у клубі Forge Lviv");
+
+        db.Subscriptions.AddRange(subA, subB);
+
         // Information materials — ctor: (title, body, category?).
         var materialA = new InformationMaterial(
             title: "Правила відвідування",
