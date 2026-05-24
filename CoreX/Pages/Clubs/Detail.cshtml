@@ -1,0 +1,45 @@
+@page "/Clubs/{id:guid}"
+@model CoreX.Pages.Clubs.DetailModel
+@{
+    ViewData["Title"] = Model.Club.Name;
+}
+
+<section class="max-w-5xl mx-auto px-4 py-12 md:py-16">
+    <p class="text-xs font-semibold tracking-[0.2em] uppercase text-brand-500">@Model.Club.City</p>
+    <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-tight">@Model.Club.Name</h1>
+    <p class="mt-2 text-ink-500">@Model.Club.Address</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Club.Description))
+    {
+        <p class="mt-6 text-ink-800 leading-relaxed max-w-2xl">@Model.Club.Description</p>
+    }
+
+    <dl class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+        @if (!string.IsNullOrWhiteSpace(Model.Club.Phone))
+        {
+            <div><dt class="text-xs uppercase tracking-wide text-ink-500 font-semibold">Телефон</dt><dd class="mt-1">@Model.Club.Phone</dd></div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Club.Email))
+        {
+            <div><dt class="text-xs uppercase tracking-wide text-ink-500 font-semibold">Email</dt><dd class="mt-1 break-all">@Model.Club.Email</dd></div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Club.WorkingHours))
+        {
+            <div><dt class="text-xs uppercase tracking-wide text-ink-500 font-semibold">Години роботи</dt><dd class="mt-1">@Model.Club.WorkingHours</dd></div>
+        }
+    </dl>
+
+    <nav class="mt-12 border-b border-ink-200 flex gap-2 text-sm font-semibold" role="tablist">
+        <button type="button" hx-get="/Clubs/@Model.Club.Id?handler=Trainers"
+                hx-target="#tab-content" hx-swap="innerHTML"
+                class="px-4 py-3 hover:text-brand-500">Тренери</button>
+        <button type="button" hx-get="/Clubs/@Model.Club.Id?handler=GroupClasses"
+                hx-target="#tab-content" hx-swap="innerHTML"
+                class="px-4 py-3 hover:text-brand-500">Заняття</button>
+        <button type="button" hx-get="/Clubs/@Model.Club.Id?handler=Vacancies"
+                hx-target="#tab-content" hx-swap="innerHTML"
+                class="px-4 py-3 hover:text-brand-500">Вакансії</button>
+    </nav>
+
+    <div id="tab-content" class="mt-6"></div>
+</section>
