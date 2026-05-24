@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CoreX.UI.Controllers
 {
     [ApiController]
-    [Route("discounts")]
+    [Route("api/discounts")]
     public class DiscountsController : ControllerBase
     {
         private readonly IDiscountService _discountService;

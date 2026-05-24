@@ -8,7 +8,7 @@ namespace CoreX.UI.Controllers
 {
     [ApiController]
     [Authorize]
-    [Route("memberships")]
+    [Route("api/memberships")]
     public class MembershipsController : ControllerBase
     {
         private readonly IMembershipService _membershipService;

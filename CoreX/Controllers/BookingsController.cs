@@ -8,7 +8,7 @@ namespace CoreX.UI.Controllers
 {
     [ApiController]
     [Authorize]
-    [Route("bookings")]
+    [Route("api/bookings")]
     public class BookingsController : ControllerBase
     {
         private readonly IBookingService _bookingService;

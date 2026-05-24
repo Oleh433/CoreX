@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CoreX.UI.Controllers
 {
     [ApiController]
-    [Route("training-plan")]
+    [Route("api/training-plan")]
     public class TrainingPlanController : ControllerBase
     {
         private readonly ITrainingPlanService _service;

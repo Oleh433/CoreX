@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CoreX.UI.Controllers
 {
     [ApiController]
-    [Route("information-materials")]
+    [Route("api/information-materials")]
     public class InformationMaterialsController : ControllerBase
     {
         private readonly IInformationMaterialService _service;

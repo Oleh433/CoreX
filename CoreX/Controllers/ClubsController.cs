@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CoreX.UI.Controllers
 {
     [ApiController]
-    [Route("clubs")]
+    [Route("api/clubs")]
     public class ClubsController : ControllerBase
     {
         private readonly IClubService _clubService;

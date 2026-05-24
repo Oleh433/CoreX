@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CoreX.UI.Controllers
 {
     [ApiController]
-    [Route("vacancies")]
+    [Route("api/vacancies")]
     public class VacanciesController : ControllerBase
     {
         private readonly IVacancyService _vacancyService;

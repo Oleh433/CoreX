@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace CoreX.UI.Controllers
 {
     [ApiController]
-    [Route("vacancy-applications")]
+    [Route("api/vacancy-applications")]
     public class VacancyApplicationsController : ControllerBase
     {
         private readonly IVacancyApplicationService _service;

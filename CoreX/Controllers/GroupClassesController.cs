@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CoreX.UI.Controllers
 {
     [ApiController]
-    [Route("group-classes")]
+    [Route("api/group-classes")]
     public class GroupClassesController : ControllerBase
     {
         private readonly IGroupClassService _service;
