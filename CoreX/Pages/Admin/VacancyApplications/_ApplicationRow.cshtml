@@ -1,0 +1,45 @@
+@model CoreX.Application.DTO.VacancyApplicationResponseDto
+
+<tr id="application-row-@Model.Id">
+    <td class="px-4 py-3 font-semibold">@Model.FullName</td>
+    <td class="px-4 py-3 text-sm text-ink-500">@Model.Email</td>
+    <td class="px-4 py-3 text-sm text-ink-500">@Model.Phone</td>
+    <td class="px-4 py-3 text-sm">@(string.IsNullOrEmpty(Model.VacancyTitle) ? "—" : Model.VacancyTitle)</td>
+    <td class="px-4 py-3">
+        @{
+            var (badgeClass, badgeText) = Model.Status switch
+            {
+                "New" => ("bg-brand-50 text-brand-700", "Нова"),
+                "Reviewed" => ("bg-info/10 text-info", "Розглянута"),
+                "Accepted" => ("bg-success/10 text-success", "Прийнята"),
+                "Rejected" => ("bg-ink-200 text-ink-500", "Відхилена"),
+                _ => ("bg-ink-200 text-ink-500", Model.Status),
+            };
+        }
+        <span class="text-xs font-semibold uppercase rounded-pill px-3 py-1 @badgeClass">@badgeText</span>
+    </td>
+    <td class="px-4 py-3 text-right space-x-2">
+        @if (Model.Status == "New")
+        {
+            <button type="button"
+                    hx-post="/Admin/VacancyApplications?handler=Status&id=@Model.Id&status=Reviewed"
+                    hx-target="#application-row-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="text-info hover:underline">Розглянути</button>
+        }
+        @if (Model.Status == "New" || Model.Status == "Reviewed")
+        {
+            <button type="button"
+                    hx-post="/Admin/VacancyApplications?handler=Status&id=@Model.Id&status=Accepted"
+                    hx-target="#application-row-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="text-success hover:underline">Прийняти</button>
+            <button type="button"
+                    hx-post="/Admin/VacancyApplications?handler=Status&id=@Model.Id&status=Rejected"
+                    hx-confirm="Відхилити заявку?"
+                    hx-target="#application-row-@Model.Id"
+                    hx-swap="outerHTML"
+                    class="text-danger hover:underline">Відхилити</button>
+        }
+    </td>
+</tr>
