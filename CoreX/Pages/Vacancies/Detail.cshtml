@@ -1,0 +1,34 @@
+@page "/Vacancies/{id:guid}"
+@model CoreX.Pages.Vacancies.DetailModel
+@{
+    ViewData["Title"] = Model.Vacancy.Title;
+}
+
+<section class="max-w-3xl mx-auto px-4 py-12 md:py-16">
+    @if (!string.IsNullOrWhiteSpace(Model.Vacancy.ClubName))
+    {
+        <p class="text-xs font-semibold tracking-[0.2em] uppercase text-brand-500">@Model.Vacancy.ClubName</p>
+    }
+    <h1 class="mt-2 text-3xl md:text-4xl font-black uppercase tracking-tight">@Model.Vacancy.Title</h1>
+    @if (Model.Vacancy.Salary is not null)
+    {
+        <p class="mt-2 text-ink-500">від @Model.Vacancy.Salary.Value.ToString("0") ₴</p>
+    }
+
+    <div class="mt-8 space-y-6 text-ink-800 leading-relaxed">
+        <div>
+            <h2 class="text-xs uppercase tracking-wide text-ink-500 font-semibold">Опис</h2>
+            <p class="mt-2 whitespace-pre-line">@Model.Vacancy.Description</p>
+        </div>
+        <div>
+            <h2 class="text-xs uppercase tracking-wide text-ink-500 font-semibold">Вимоги</h2>
+            <p class="mt-2 whitespace-pre-line">@Model.Vacancy.Requirements</p>
+        </div>
+        @if (Model.Vacancy.ApplicationDeadline is not null)
+        {
+            <p class="text-sm text-ink-500">Дедлайн: @Model.Vacancy.ApplicationDeadline.Value.ToString("d MMMM yyyy")</p>
+        }
+    </div>
+
+    <a asp-page="/Vacancies/Apply" asp-route-id="@Model.Vacancy.Id" class="btn-brand mt-10 inline-flex">Подати заявку →</a>
+</section>
