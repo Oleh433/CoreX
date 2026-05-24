@@ -1,0 +1,33 @@
+@page
+@model CoreX.Pages.Admin.Bookings.IndexModel
+@{
+    ViewData["Title"] = "Бронювання";
+}
+
+<h1 class="text-2xl font-black uppercase tracking-tight">Бронювання</h1>
+
+@if (Model.Bookings.Count == 0)
+{
+    <p class="mt-6 text-ink-500">Поки немає бронювань.</p>
+}
+else
+{
+    <table class="mt-6 w-full bg-white rounded-card border border-ink-200 text-sm">
+        <thead class="bg-ink-50 text-left text-xs uppercase tracking-wider text-ink-500">
+            <tr>
+                <th class="px-4 py-2">Імʼя</th>
+                <th class="px-4 py-2">Email</th>
+                <th class="px-4 py-2">Телефон</th>
+                <th class="px-4 py-2">Статус</th>
+                <th class="px-4 py-2">Створено</th>
+                <th class="px-4 py-2 text-right">Дії</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-200">
+        @foreach (var b in Model.Bookings)
+        {
+            @await Html.PartialAsync("_BookingRow", b)
+        }
+        </tbody>
+    </table>
+}
