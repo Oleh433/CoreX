@@ -16,12 +16,16 @@
 </head>
 <body hx-headers='{"@tokens.HeaderName":"@tokens.RequestToken"}'>
 
-    <header class="border-b border-ink-200 bg-white">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-brand-500 focus:text-white focus:px-4 focus:py-2 focus:rounded-card">
+        Перейти до контенту
+    </a>
+
+    <header role="banner" class="border-b border-ink-200 bg-white">
         <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-6">
             <a href="/" class="text-2xl font-black tracking-tight text-ink-900">
                 Core<span class="text-brand-500">X</span>
             </a>
-            <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-ink-800">
+            <nav role="navigation" aria-label="Головна навігація" class="hidden md:flex items-center gap-6 text-sm font-semibold text-ink-800">
                 <a href="/Clubs">Клуби</a>
                 <a href="/Memberships">Абонементи</a>
                 <a href="/Trainers">Тренери</a>
@@ -51,11 +55,11 @@
         </div>
     </header>
 
-    <main>
+    <main id="main-content" role="main">
         @RenderBody()
     </main>
 
-    <footer class="border-t border-ink-200 bg-ink-50 mt-16">
+    <footer role="contentinfo" class="border-t border-ink-200 bg-ink-50 mt-16">
         <div class="max-w-6xl mx-auto px-4 py-8 text-sm text-ink-500">
             © @DateTime.UtcNow.Year CoreX. Усі права захищено.
         </div>
