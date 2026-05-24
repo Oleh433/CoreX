@@ -19,3 +19,24 @@
            px-5 py-2.5 rounded-pill border-2 border-ink-900 transition hover:bg-ink-900 hover:text-white;
   }
 }
+
+@layer utilities {
+  .htmx-indicator {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+    pointer-events: none;
+  }
+  .htmx-indicator.htmx-request,
+  .htmx-request .htmx-indicator {
+    opacity: 1;
+  }
+}
+
+@layer components {
+  .toast {
+    @apply pointer-events-auto rounded-card border bg-white shadow-flame px-4 py-3 text-sm flex items-start gap-3 max-w-sm;
+  }
+  .toast-success { @apply border-success text-success; }
+  .toast-error   { @apply border-danger text-danger; }
+  .toast-info    { @apply border-info text-info; }
+}

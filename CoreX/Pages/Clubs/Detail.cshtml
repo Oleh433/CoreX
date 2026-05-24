@@ -32,16 +32,23 @@
     <nav class="mt-12 border-b border-ink-200 flex gap-2 text-sm font-semibold" role="tablist">
         <button type="button" hx-get="/Clubs/@Model.Club.Id?handler=Trainers"
                 hx-target="#tab-content" hx-swap="innerHTML"
+                hx-indicator="#tab-spinner"
                 class="px-4 py-3 hover:text-brand-500">Тренери</button>
         <button type="button" hx-get="/Clubs/@Model.Club.Id?handler=GroupClasses"
                 hx-target="#tab-content" hx-swap="innerHTML"
+                hx-indicator="#tab-spinner"
                 class="px-4 py-3 hover:text-brand-500">Заняття</button>
         <button type="button" hx-get="/Clubs/@Model.Club.Id?handler=Vacancies"
                 hx-target="#tab-content" hx-swap="innerHTML"
+                hx-indicator="#tab-spinner"
                 class="px-4 py-3 hover:text-brand-500">Вакансії</button>
         <button type="button" hx-get="/Clubs/@Model.Club.Id?handler=Memberships"
                 hx-target="#tab-content" hx-swap="innerHTML"
+                hx-indicator="#tab-spinner"
                 class="px-4 py-3 hover:text-brand-500">Абонементи</button>
+        <span id="tab-spinner" class="htmx-indicator ml-auto self-center mr-2">
+            <partial name="_Spinner" />
+        </span>
     </nav>
 
     <div id="tab-content" class="mt-6"></div>
