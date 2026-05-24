@@ -87,4 +87,29 @@ public class DetailTests : IClassFixture<CoreXFactory>
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task GetHx_MembershipsHandler_ReturnsPartialWithSubscriptionTitle()
+    {
+        var clubs = await SeedData.SeedDiscoveryFixtureAsync(_factory);
+        var client = _factory.CreateClient();
+
+        var response = await client.GetHxAsync($"/Clubs/{clubs[0].Id}?handler=Memberships");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("<html", body);
+        Assert.Contains("Місячний", body);
+    }
+
+    [Fact]
+    public async Task Get_MembershipsHandler_WithoutHxHeader_Returns404()
+    {
+        var clubs = await SeedData.SeedDiscoveryFixtureAsync(_factory);
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync($"/Clubs/{clubs[0].Id}?handler=Memberships");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

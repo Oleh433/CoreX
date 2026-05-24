@@ -1,0 +1,19 @@
+@model CoreX.Pages.Clubs.DetailModel
+
+@if (Model.Subscriptions.Count == 0)
+{
+    <p class="text-ink-500">Активних абонементів немає.</p>
+}
+else
+{
+    <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    @foreach (var s in Model.Subscriptions)
+    {
+        <li class="rounded-card border border-ink-200 p-4">
+            <p class="font-bold text-ink-900">@s.Title</p>
+            <p class="text-sm text-ink-500">@s.Price.ToString("0") ₴ · @s.DurationDays днів</p>
+            <a asp-page="/Memberships/Book" asp-route-subId="@s.Id" class="btn-brand mt-3 inline-flex text-xs">Забронювати →</a>
+        </li>
+    }
+    </ul>
+}

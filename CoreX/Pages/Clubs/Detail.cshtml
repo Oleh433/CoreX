@@ -39,6 +39,9 @@
         <button type="button" hx-get="/Clubs/@Model.Club.Id?handler=Vacancies"
                 hx-target="#tab-content" hx-swap="innerHTML"
                 class="px-4 py-3 hover:text-brand-500">Вакансії</button>
+        <button type="button" hx-get="/Clubs/@Model.Club.Id?handler=Memberships"
+                hx-target="#tab-content" hx-swap="innerHTML"
+                class="px-4 py-3 hover:text-brand-500">Абонементи</button>
     </nav>
 
     <div id="tab-content" class="mt-6"></div>
