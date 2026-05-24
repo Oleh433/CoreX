@@ -1,0 +1,63 @@
+@page
+@model CoreX.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Реєстрація";
+}
+
+<section class="max-w-md mx-auto px-4 py-12 md:py-16">
+    <h1 class="text-3xl font-black uppercase tracking-tight">Реєстрація</h1>
+    <p class="mt-3 text-ink-500">Перетни свою межу разом з CoreX.</p>
+
+    <form method="post" class="mt-8 space-y-5" novalidate>
+        <div asp-validation-summary="ModelOnly" class="rounded-card border border-danger bg-danger/5 text-danger px-4 py-3 text-sm"></div>
+
+        <div>
+            <label asp-for="Input.FullName" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
+                Повне ім'я
+            </label>
+            <input asp-for="Input.FullName" autocomplete="name" required
+                   class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
+            <span asp-validation-for="Input.FullName" class="mt-1 block text-sm text-danger"></span>
+        </div>
+
+        <div>
+            <label asp-for="Input.Email" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
+                Електронна пошта
+            </label>
+            <input asp-for="Input.Email" autocomplete="email" required
+                   class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
+            <span asp-validation-for="Input.Email" class="mt-1 block text-sm text-danger"></span>
+        </div>
+
+        <div>
+            <label asp-for="Input.Password" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
+                Пароль
+            </label>
+            <input asp-for="Input.Password" type="password" autocomplete="new-password" required
+                   class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
+            <span asp-validation-for="Input.Password" class="mt-1 block text-sm text-danger"></span>
+        </div>
+
+        <div>
+            <label asp-for="Input.ConfirmPassword" class="block text-xs font-semibold uppercase tracking-wide text-ink-800">
+                Підтвердження пароля
+            </label>
+            <input asp-for="Input.ConfirmPassword" type="password" autocomplete="new-password" required
+                   class="mt-1 block w-full rounded-card border-ink-200 focus:border-brand-500 focus:ring-brand-500" />
+            <span asp-validation-for="Input.ConfirmPassword" class="mt-1 block text-sm text-danger"></span>
+        </div>
+
+        <label class="flex items-start gap-3 text-sm text-ink-800">
+            <input asp-for="Input.TermsAccepted" type="checkbox" class="mt-1 rounded border-ink-200 text-brand-500 focus:ring-brand-500" />
+            <span>Я приймаю умови використання та політику конфіденційності.</span>
+        </label>
+        <span asp-validation-for="Input.TermsAccepted" class="block text-sm text-danger"></span>
+
+        <button type="submit" class="btn-brand w-full">Зареєструватися</button>
+    </form>
+
+    <p class="mt-6 text-sm text-ink-500 text-center">
+        Вже маєте акаунт?
+        <a asp-page="/Account/Login" class="font-semibold text-brand-500 hover:underline">Увійти</a>
+    </p>
+</section>
